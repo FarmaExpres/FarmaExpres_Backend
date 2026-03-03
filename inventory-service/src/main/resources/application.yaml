@@ -1,3 +1,34 @@
+server:
+  port: 8082
+
 spring:
   application:
     name: inventory-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/farmaexpres_inventory
+    username: postgres
+    password: 1234
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  jackson:
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+logging:
+  level:
+    org.hibernate.SQL: debug
