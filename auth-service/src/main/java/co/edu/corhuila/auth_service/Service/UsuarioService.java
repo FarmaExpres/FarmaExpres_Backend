@@ -67,5 +67,30 @@ public class UsuarioService {
         return usuarioGuardado;
     }
 
+    // =========================
+    // Cambiar Contraseña
+    // =========================
+
+
+    public void cambiarPassword(Long usuarioId,
+                                String passwordActual,
+                                String nuevaPassword
+    ) {
+
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        if (!passwordEncoder.matches(passwordActual, usuario.getPassword())) {
+            throw new RuntimeException("Contraseña actual incorrecta");
+        }
+
+        usuario.setPassword(passwordEncoder.encode(nuevaPassword));
+        usuarioRepository.save(usuario);
+
+        bitacoraRepository.save(
+                new Bitacora(usuario.getId(), "CAMBIO_PASSWORD")
+        );
+    }
+
 
 }

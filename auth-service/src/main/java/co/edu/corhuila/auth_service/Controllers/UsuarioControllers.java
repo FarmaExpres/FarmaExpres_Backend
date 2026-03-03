@@ -1,13 +1,12 @@
 package co.edu.corhuila.auth_service.Controllers;
 
+import co.edu.corhuila.auth_service.DTO.CambiarPasswordRequest;
 import co.edu.corhuila.auth_service.DTO.UsuarioRequest;
 import co.edu.corhuila.auth_service.DTO.UsuarioResponse;
 import co.edu.corhuila.auth_service.Entity.Usuario;
 import co.edu.corhuila.auth_service.Service.UsuarioService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/usuarios")
@@ -36,6 +35,20 @@ public class UsuarioControllers {
                 usuario.getEmail(),
                 usuario.getRol().getNombre()
         );
+    }
+
+    @PutMapping("/{id}/password")
+    public ResponseEntity<String> cambiarPassword(
+            @PathVariable Long id,
+            @RequestBody CambiarPasswordRequest request) {
+
+        usuarioService.cambiarPassword(
+                id,
+                request.getPasswordActual(),
+                request.getNuevaPassword()
+        );
+
+        return ResponseEntity.ok("Contraseña actualizada correctamente");
     }
 
 

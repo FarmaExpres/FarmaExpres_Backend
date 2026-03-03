@@ -26,8 +26,10 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // ENDPOINTS PÚBLICOS
-                        .requestMatchers("/auth/**").permitAll()
+                        // SOLO LOGIN ES PUBLICO
+                        .requestMatchers("/auth/login").permitAll()
+
+                        .requestMatchers("/usuarios/**").hasRole("ADMIN")
 
                         // SOLO ADMIN
                         .requestMatchers("/bitacora/**").hasRole("ADMIN")
