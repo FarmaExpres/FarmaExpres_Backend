@@ -5,6 +5,7 @@ import co.edu.corhuila.inventory_service.Entity.Producto;
 import co.edu.corhuila.inventory_service.Entity.TipoMovimiento;
 import co.edu.corhuila.inventory_service.Repository.MovimientoRepository;
 import co.edu.corhuila.inventory_service.Repository.ProductoRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -53,14 +54,44 @@ public class ProductoService {
     public Producto guardar(Producto producto) {
         return productoRepository.save(producto);
     }
-    public Producto actualizarProducto(Producto producto) {
-        // 1. Guardamos el producto (como tiene ID, JPA hace un UPDATE)
+
+
+    @Transactional
+    public Producto actualizarProducto(Long id, Producto datosActualizados) {
+
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+
+        Integer stockAnterior = producto.getStock();
+
+        // Actualizar datos
+        producto.setNombre(datosActualizados.getNombre());
+        producto.setPrecio(datosActualizados.getPrecio());
+        producto.setStock(datosActualizados.getStock());
+
         Producto productoGuardado = productoRepository.save(producto);
 
-        // 2. Creamos el registro en la tabla de movimientos como ACTUALIZADO
+        // Determinar tipo de movimiento
+        Integer stockNuevo = datosActualizados.getStock();
+
+        TipoMovimiento tipoMovimiento;
+        Integer cantidadMovimiento;
+
+        if (stockNuevo > stockAnterior) {
+            tipoMovimiento = TipoMovimiento.ENTRADA;
+            cantidadMovimiento = stockNuevo - stockAnterior;
+        } else if (stockNuevo < stockAnterior) {
+            tipoMovimiento = TipoMovimiento.SALIDA;
+            cantidadMovimiento = stockAnterior - stockNuevo;
+        } else {
+            tipoMovimiento = TipoMovimiento.ACTUALIZADO;
+            cantidadMovimiento = 0;
+        }
+
+        // Registrar movimiento
         Movimiento movimiento = new Movimiento(
-                TipoMovimiento.ACTUALIZADO,
-                productoGuardado.getStock(),
+                tipoMovimiento,
+                cantidadMovimiento,
                 productoGuardado
         );
 
@@ -69,9 +100,6 @@ public class ProductoService {
         return productoGuardado;
     }
 
-
-    public void eliminar(Long id) {
-        productoRepository.deleteById(id);
-    }
+    
 }
 

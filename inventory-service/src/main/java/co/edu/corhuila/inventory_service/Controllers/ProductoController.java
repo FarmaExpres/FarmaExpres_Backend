@@ -25,21 +25,16 @@ public class ProductoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Producto> actualizar(@PathVariable Long id, @RequestBody Producto productoActualizado) {
-        Producto producto = productoService.obtenerPorId(id);
+    public ResponseEntity<Producto> actualizarProducto(
+            @PathVariable Long id,
+            @RequestBody Producto producto) {
 
-        producto.setNombre(productoActualizado.getNombre());
-        producto.setPrecio(productoActualizado.getPrecio());
-        producto.setStock(productoActualizado.getStock());
+        Producto actualizado = productoService.actualizarProducto(id, producto);
 
-        Producto guardado = productoService.guardar(producto);
-        return ResponseEntity.ok(guardado); // Ahora sí coinciden los tipos
+        return ResponseEntity.ok(actualizado);
     }
 
-    @DeleteMapping("/{id}")
-    public void eliminar(@PathVariable Long id) {
-        productoService.eliminar(id);
-    }
+
 
 
 }
