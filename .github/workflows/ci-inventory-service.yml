@@ -1,0 +1,38 @@
+name: CI Inventory Service
+
+on:
+  push:
+    branches: [ develop, qa, main ]
+    paths:
+      - 'inventory-service/**'
+  pull_request:
+    branches: [ develop, qa, main ]
+    paths:
+      - 'inventory-service/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: inventory-service
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build
+        run: mvn clean compile
+
+      - name: Run tests
+        run: mvn test
+
+      - name: Build verificado
+        run: echo "Inventory Service OK ✅"
