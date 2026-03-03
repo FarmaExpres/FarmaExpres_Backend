@@ -24,14 +24,15 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Vital para permitir POST desde Postman
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+                        // ENDPOINTS PÚBLICOS
                         .requestMatchers("/auth/**").permitAll()
 
-                        // CAMBIA ESTA LÍNEA para evitar el 403:
-                        .requestMatchers("/usuarios/**").permitAll()
-
+                        // SOLO ADMIN
                         .requestMatchers("/bitacora/**").hasRole("ADMIN")
+
+                        // TODO LO DEMÁS REQUIERE AUTENTICACIÓN
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
