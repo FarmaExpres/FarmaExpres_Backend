@@ -31,6 +31,7 @@ public class SecurityConfig {
 
                         .requestMatchers("/usuarios/**").hasRole("ADMIN")
 
+
                         // SOLO ADMIN
                         .requestMatchers("/bitacora/**").hasRole("ADMIN")
 

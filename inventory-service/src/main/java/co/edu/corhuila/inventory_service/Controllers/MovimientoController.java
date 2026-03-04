@@ -2,7 +2,7 @@ package co.edu.corhuila.inventory_service.Controllers;
 
 
 
-import co.edu.corhuila.inventory_service.Entity.Movimiento;
+import co.edu.corhuila.inventory_service.Dto.MovimientoResponse;
 import co.edu.corhuila.inventory_service.Service.MovimientoService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,7 +24,7 @@ public class MovimientoController {
 
 
     @GetMapping
-    public ResponseEntity<List<Movimiento>> listar() {
+    public ResponseEntity<List<MovimientoResponse>> listarMovimientos() {
         return ResponseEntity.ok(movimientoService.listarMovimientos());
     }
 }

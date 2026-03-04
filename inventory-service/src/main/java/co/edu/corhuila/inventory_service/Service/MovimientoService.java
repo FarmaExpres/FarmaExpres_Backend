@@ -1,6 +1,7 @@
 package co.edu.corhuila.inventory_service.Service;
 
 
+import co.edu.corhuila.inventory_service.Dto.MovimientoResponse;
 import co.edu.corhuila.inventory_service.Entity.Movimiento;
 import co.edu.corhuila.inventory_service.Entity.Producto;
 import co.edu.corhuila.inventory_service.Entity.TipoMovimiento;
@@ -22,8 +23,12 @@ public class MovimientoService {
     }
 
 
-    public List<Movimiento> listarMovimientos() {
-        return movimientoRepository.findAll();
+
+    public List<MovimientoResponse> listarMovimientos() {
+        return movimientoRepository.findAll()
+                .stream()
+                .map(MovimientoResponse::new)
+                .toList();
     }
 
 
