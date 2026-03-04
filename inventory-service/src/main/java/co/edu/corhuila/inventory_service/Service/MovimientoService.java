@@ -14,32 +14,16 @@ import java.util.List;
 public class MovimientoService {
 
     private final MovimientoRepository movimientoRepository;
-    private final ProductoRepository productoRepository;
 
-    public MovimientoService(MovimientoRepository movimientoRepository,
-                             ProductoRepository productoRepository) {
+    public MovimientoService(MovimientoRepository movimientoRepository) {
         this.movimientoRepository = movimientoRepository;
-        this.productoRepository = productoRepository;
+
     }
+
 
     public List<Movimiento> listarMovimientos() {
         return movimientoRepository.findAll();
     }
 
-    public Producto actualizarConMovimiento(Producto producto) {
-        // Guardamos el producto actualizado
-        Producto productoGuardado = productoRepository.save(producto);
-
-        // Creamos el registro en la tabla de movimientos
-        Movimiento movimiento = new Movimiento(
-                TipoMovimiento.ACTUALIZADO, // El tipo que querías
-                productoGuardado.getStock(),
-                productoGuardado
-        );
-
-        movimientoRepository.save(movimiento);
-
-        return productoGuardado;
-    }
 
 }

@@ -21,6 +21,8 @@ public class MovimientoController {
         this.movimientoService = movimientoService;
     }
 
+
+
     @GetMapping
     public ResponseEntity<List<Movimiento>> listar() {
         return ResponseEntity.ok(movimientoService.listarMovimientos());

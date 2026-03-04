@@ -46,10 +46,6 @@ public class ProductoService {
         return productoGuardado;
     }
 
-    public List<Producto> listarProductos() {
-        return productoRepository.findAll();
-    }
-
     public Producto obtenerPorId(Long id) {
         return productoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -57,11 +53,6 @@ public class ProductoService {
                         "Producto no encontrado"
                 ));
     }
-
-    public Producto guardar(Producto producto) {
-        return productoRepository.save(producto);
-    }
-
 
 
     @Transactional
@@ -132,6 +123,7 @@ public class ProductoService {
         movimientoRepository.save(movimiento);
 
     }
+
 
 
 }

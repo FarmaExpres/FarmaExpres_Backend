@@ -9,8 +9,7 @@ import java.util.List;
 
 public interface MovimientoRepository extends JpaRepository<Movimiento, Long> {
 
-    List<Movimiento> findByProductoId(Long productoId);
+
 
     List<Movimiento> findByTipo(TipoMovimiento tipo);
-
 }
