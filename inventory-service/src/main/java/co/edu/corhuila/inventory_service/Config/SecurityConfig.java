@@ -34,10 +34,12 @@ public class SecurityConfig {
                         // ADMIN puede gestionar productos (crear, actualizar, eliminar y ver)
                         .requestMatchers("/error").permitAll()
 
-                        .requestMatchers("/productos/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/productos/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/productos/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/productos/**").hasRole("ADMIN")
 
-                        .requestMatchers(HttpMethod.GET,"/productos/**").hasRole("EMPLEADO")
-
+                        // ADMIN y EMPLEADO pueden ver productos
+                        .requestMatchers(HttpMethod.GET, "/productos/**").hasAnyRole("ADMIN","EMPLEADO")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class);

@@ -2,6 +2,7 @@ package co.edu.corhuila.inventory_service.Controllers;
 
 
 
+import co.edu.corhuila.inventory_service.Dto.ProductoSinStockResponse;
 import co.edu.corhuila.inventory_service.Entity.Producto;
 import co.edu.corhuila.inventory_service.Service.ProductoService;
 import org.springframework.http.ResponseEntity;
@@ -49,7 +50,10 @@ public class ProductoController {
         return ResponseEntity.ok(productoService.listarProductosActivos());
     }
 
-
+    @GetMapping("/sin-stock")
+    public ResponseEntity<List<ProductoSinStockResponse>> obtenerProductosSinStock() {
+        return ResponseEntity.ok(productoService.productosSinStock());
+    }
 
 
 }

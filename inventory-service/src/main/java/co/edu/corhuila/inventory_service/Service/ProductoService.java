@@ -1,5 +1,6 @@
 package co.edu.corhuila.inventory_service.Service;
 
+import co.edu.corhuila.inventory_service.Dto.ProductoSinStockResponse;
 import co.edu.corhuila.inventory_service.Entity.Movimiento;
 import co.edu.corhuila.inventory_service.Entity.Producto;
 import co.edu.corhuila.inventory_service.Entity.TipoMovimiento;
@@ -134,5 +135,14 @@ public class ProductoService {
         return productoRepository.findByActivoTrue();
 
     }
+
+    public List<ProductoSinStockResponse> productosSinStock() {
+
+        return productoRepository.findByStockAndActivoTrue(0)
+                .stream()
+                .map(ProductoSinStockResponse::new)
+                .toList();
+    }
+
 }
 
