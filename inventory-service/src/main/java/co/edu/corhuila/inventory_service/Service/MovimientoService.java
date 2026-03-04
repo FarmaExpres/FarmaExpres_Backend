@@ -15,7 +15,8 @@ public class MovimientoService {
 
     private final MovimientoRepository movimientoRepository;
 
-    public MovimientoService(MovimientoRepository movimientoRepository) {
+    public MovimientoService(MovimientoRepository movimientoRepository,
+                             ProductoRepository productoRepository) {
         this.movimientoRepository = movimientoRepository;
 
     }

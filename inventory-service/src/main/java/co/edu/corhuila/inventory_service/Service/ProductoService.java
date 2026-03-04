@@ -124,7 +124,15 @@ public class ProductoService {
 
     }
 
+    public List<Producto> listarProductos() {
+        return productoRepository.findAll();
+
+    }
 
 
+    public List<Producto> listarProductosActivos() {
+        return productoRepository.findByActivoTrue();
+
+    }
 }
 

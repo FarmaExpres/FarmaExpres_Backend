@@ -39,6 +39,15 @@ public class ProductoController {
         return ResponseEntity.ok("Producto eliminado correctamente");
     }
 
+    @GetMapping
+    public List<Producto> listarProductos() {
+        return productoService.listarProductos();
+    }
+
+    @GetMapping("/Activos")
+    public ResponseEntity<List<Producto>> listarProductosActivos() {
+        return ResponseEntity.ok(productoService.listarProductosActivos());
+    }
 
 
 
