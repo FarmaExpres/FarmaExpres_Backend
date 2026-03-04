@@ -27,7 +27,7 @@ public class Producto {
     private BigDecimal precio;
 
     @Column(nullable = false)
-    private Boolean activo;
+    private Boolean activo = true;
 
     @Column(name = "fechavencimiento", nullable = false)
     private LocalDate fechavencimiento;
@@ -77,5 +77,16 @@ public class Producto {
 
     public void setFechavencimiento(LocalDate fechavencimiento) {
         this.fechavencimiento = fechavencimiento;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+    public boolean isActivo() {
+        return activo;
+    }
+
+    public void setActivo(boolean activo) {
+        this.activo = activo;
     }
 }

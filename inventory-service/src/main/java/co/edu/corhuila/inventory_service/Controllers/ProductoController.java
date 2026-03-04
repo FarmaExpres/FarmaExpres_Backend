@@ -5,6 +5,7 @@ package co.edu.corhuila.inventory_service.Controllers;
 import co.edu.corhuila.inventory_service.Entity.Producto;
 import co.edu.corhuila.inventory_service.Service.ProductoService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,12 +19,10 @@ public class ProductoController {
     public ProductoController(ProductoService productoService) {
         this.productoService = productoService;
     }
-
     @PostMapping
     public ResponseEntity<Producto> crear(@RequestBody Producto producto) {
         return ResponseEntity.ok(productoService.crearProducto(producto));
     }
-
     @PutMapping("/{id}")
     public ResponseEntity<Producto> actualizarProducto(
             @PathVariable Long id,
@@ -34,6 +33,11 @@ public class ProductoController {
         return ResponseEntity.ok(actualizado);
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> eliminarProducto(@PathVariable Long id) {
+        productoService.eliminarProducto(id);
+        return ResponseEntity.ok("Producto eliminado correctamente");
+    }
 
 
 

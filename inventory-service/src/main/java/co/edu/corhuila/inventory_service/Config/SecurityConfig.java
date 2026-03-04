@@ -32,10 +32,11 @@ public class SecurityConfig {
 
 
                         // ADMIN puede gestionar productos (crear, actualizar, eliminar y ver)
-                        .requestMatchers(HttpMethod.POST, "/productos/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/productos/**").hasRole("ADMIN")
+                        .requestMatchers("/error").permitAll()
 
+                        .requestMatchers("/productos/**").hasRole("ADMIN")
 
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class);
 

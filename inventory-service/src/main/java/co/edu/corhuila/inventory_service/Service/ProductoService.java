@@ -6,7 +6,9 @@ import co.edu.corhuila.inventory_service.Entity.TipoMovimiento;
 import co.edu.corhuila.inventory_service.Repository.MovimientoRepository;
 import co.edu.corhuila.inventory_service.Repository.ProductoRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -56,6 +58,7 @@ public class ProductoService {
     }
 
 
+
     @Transactional
     public Producto actualizarProducto(Long id, Producto datosActualizados) {
 
@@ -63,21 +66,20 @@ public class ProductoService {
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
 
         Integer stockAnterior = producto.getStock();
-
         // Actualizar datos
         producto.setNombre(datosActualizados.getNombre());
         producto.setPrecio(datosActualizados.getPrecio());
         producto.setStock(datosActualizados.getStock());
-
         Producto productoGuardado = productoRepository.save(producto);
-
         // Determinar tipo de movimiento
         Integer stockNuevo = datosActualizados.getStock();
-
         TipoMovimiento tipoMovimiento;
         Integer cantidadMovimiento;
+        if (!producto.isActivo()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "No se puede modificar un producto eliminado");
 
-        if (stockNuevo > stockAnterior) {
+        }else if (stockNuevo > stockAnterior) {
             tipoMovimiento = TipoMovimiento.ENTRADA;
             cantidadMovimiento = stockNuevo - stockAnterior;
         } else if (stockNuevo < stockAnterior) {
@@ -100,6 +102,26 @@ public class ProductoService {
         return productoGuardado;
     }
 
-    
+    @Transactional
+    public void eliminarProducto(Long id) {
+
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+
+        producto.setActivo(false);
+        productoRepository.save(producto);
+
+        // Registrar movimiento de eliminación
+        Movimiento movimiento = new Movimiento(
+                TipoMovimiento.ELIMINACION,
+                producto.getStock(),
+                producto
+        );
+
+        movimientoRepository.save(movimiento);
+
+    }
+
+
 }
 
