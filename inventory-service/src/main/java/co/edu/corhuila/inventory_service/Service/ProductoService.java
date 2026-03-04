@@ -15,7 +15,6 @@ import java.util.List;
 @Service
 public class ProductoService {
 
-
     private final ProductoRepository productoRepository;
     private final MovimientoRepository movimientoRepository;
 
@@ -28,7 +27,10 @@ public class ProductoService {
     public Producto crearProducto(Producto producto) {
 
         if (productoRepository.existsByCodigo(producto.getCodigo())) {
-            throw new RuntimeException("El código ya existe");
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "El código del producto ya existe"
+            );
         }
 
         Producto productoGuardado = productoRepository.save(producto);
@@ -50,7 +52,10 @@ public class ProductoService {
 
     public Producto obtenerPorId(Long id) {
         return productoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Producto no encontrado"
+                ));
     }
 
     public Producto guardar(Producto producto) {
@@ -63,7 +68,10 @@ public class ProductoService {
     public Producto actualizarProducto(Long id, Producto datosActualizados) {
 
         Producto producto = productoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Producto no encontrado"
+                ));
 
         Integer stockAnterior = producto.getStock();
         // Actualizar datos
@@ -106,7 +114,10 @@ public class ProductoService {
     public void eliminarProducto(Long id) {
 
         Producto producto = productoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Producto no encontrado"
+                ));
 
         producto.setActivo(false);
         productoRepository.save(producto);
