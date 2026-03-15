@@ -10,7 +10,7 @@ import java.util.List;
 
 
 @RestController
-@RequestMapping("/bitacora")
+@RequestMapping("/api/binnacle")
 public class BitacoraController {
 
     private final BitacoraRepository bitacoraRepository;
