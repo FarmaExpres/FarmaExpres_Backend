@@ -35,3 +35,12 @@ services:
       DB_USERNAME: postgres
       DB_PASSWORD: 1234
       JWT_SECRET: mi_clave_secreta_larga
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api_gateway
+    depends_on:
+      - auth-service
+      - inventory-service
+    ports:
+      - "8080:8080"
