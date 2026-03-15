@@ -8,8 +8,10 @@ import co.edu.corhuila.auth_service.Entity.Usuario;
 import co.edu.corhuila.auth_service.Repository.BitacoraRepository;
 import co.edu.corhuila.auth_service.Repository.UsuarioRepository;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 
 @Service
@@ -41,17 +43,26 @@ public class AuthService {
 
         if (usuario == null) {
             registrarLoginFallido(null, email);
-            throw new RuntimeException("Usuario no encontrado");
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Usuario no encontrado"
+            );
         }
 
         if (!passwordEncoder.matches(password, usuario.getPassword())) {
             registrarLoginFallido(usuario.getId(), email);
-            throw new RuntimeException("Credenciales inválidas");
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Credenciales inválidas"
+            );
         }
 
         if (usuario.getEstado() != EstadoUsuario.ACTIVO) {
             registrarLoginFallido(usuario.getId(), email);
-            throw new RuntimeException("Usuario no activo");
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Usuario no activo"
+            );
         }
 
         registrarLoginExitoso(usuario.getId());
