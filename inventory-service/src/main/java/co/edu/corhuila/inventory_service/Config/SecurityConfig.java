@@ -34,6 +34,7 @@ public class SecurityConfig {
                         // ADMIN puede gestionar productos (crear, actualizar, eliminar y ver)
                         .requestMatchers("/error").permitAll()
 
+                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")

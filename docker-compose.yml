@@ -9,10 +9,14 @@ services:
       - "5433:5432"
     volumes:
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   auth-service:
     build: ./auth-service
-    container_name: auth_service
     depends_on:
       - postgres
     ports:
@@ -22,10 +26,14 @@ services:
       DB_USERNAME: postgres
       DB_PASSWORD: 1234
       JWT_SECRET: mi_clave_secreta_larga
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   inventory-service:
     build: ./inventory-service
-    container_name: inventory_service
     depends_on:
       - postgres
     ports:
@@ -35,12 +43,21 @@ services:
       DB_USERNAME: postgres
       DB_PASSWORD: 1234
       JWT_SECRET: mi_clave_secreta_larga
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   api-gateway:
     build: ./api-gateway
-    container_name: api_gateway
     depends_on:
       - auth-service
       - inventory-service
     ports:
       - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
