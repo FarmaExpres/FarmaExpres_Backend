@@ -6,13 +6,12 @@ import co.edu.corhuila.inventory_service.Dto.ProductoSinStockResponse;
 import co.edu.corhuila.inventory_service.Entity.Producto;
 import co.edu.corhuila.inventory_service.Service.ProductoService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/productos")
+@RequestMapping("/api/products")
 public class ProductoController {
 
     private final ProductoService productoService;
@@ -45,7 +44,7 @@ public class ProductoController {
         return productoService.listarProductos();
     }
 
-    @GetMapping("/Activos")
+    @GetMapping("/Assets")
     public ResponseEntity<List<Producto>> listarProductosActivos() {
         return ResponseEntity.ok(productoService.listarProductosActivos());
     }
