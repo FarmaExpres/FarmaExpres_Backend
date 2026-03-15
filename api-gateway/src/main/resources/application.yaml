@@ -8,34 +8,41 @@ spring:
   cloud:
     gateway:
       routes:
+        - id: auth-service-auth
+          uri: http://auth-service:8081
+          predicates:
+            - Path=/api/auth/**
 
-        - id: user-service
-          uri: http://localhost:8081
+        - id: auth-service-users
+          uri: http://auth-service:8081
           predicates:
             - Path=/api/users/**
-          filters:
-            - StripPrefix=0
 
-        - id: product-service
-          uri: http://localhost:8082
+        - id: inventory-service-products
+          uri: http://inventory-service:8082
           predicates:
             - Path=/api/products/**
-          filters:
-            - StripPrefix=0
+
+        - id: inventory-service-movements
+          uri: http://inventory-service:8082
+          predicates:
+            - Path=/api/movements/**
 
       globalcors:
-        corsConfigurations:
+        cors-configurations:
           '[/**]':
-            allowedOrigins: "*"
+            allowedOrigins:
+              - "http://localhost:3000"
             allowedMethods:
               - GET
               - POST
               - PUT
               - DELETE
+              - OPTIONS
             allowedHeaders: "*"
 
 management:
   endpoints:
     web:
       exposure:
-        include: "*"
+        include: health,info
