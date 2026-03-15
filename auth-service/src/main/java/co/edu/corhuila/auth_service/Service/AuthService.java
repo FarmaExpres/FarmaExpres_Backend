@@ -1,6 +1,7 @@
 package co.edu.corhuila.auth_service.Service;
 
 
+import co.edu.corhuila.auth_service.DTO.LoginResponseDto;
 import co.edu.corhuila.auth_service.Entity.Bitacora;
 import co.edu.corhuila.auth_service.Entity.EstadoUsuario;
 import co.edu.corhuila.auth_service.Entity.Usuario;
@@ -19,6 +20,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final BitacoraRepository bitacoraRepository;
 
+
     public AuthService(UsuarioRepository usuarioRepository,
                        BCryptPasswordEncoder passwordEncoder,
                        JwtService jwtService,
@@ -27,14 +29,14 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.bitacoraRepository = bitacoraRepository;
+
     }
 
     // =========================
     // Registrar Login
     // =========================
 
-    public String login(String email, String password) {
-
+    public LoginResponseDto login(String email, String password) {
         Usuario usuario = usuarioRepository.findByEmail(email).orElse(null);
 
         if (usuario == null) {
@@ -54,11 +56,19 @@ public class AuthService {
 
         registrarLoginExitoso(usuario.getId());
 
-        return jwtService.generarToken(
+        String token = jwtService.generarToken(
+                usuario.getEmail(),
+                usuario.getRol().getNombre()
+        );
+
+        return new LoginResponseDto(
+                token,
+                "Bearer",
                 usuario.getEmail(),
                 usuario.getRol().getNombre()
         );
     }
+
 
 
     // =========================
