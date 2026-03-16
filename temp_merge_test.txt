@@ -1,0 +1,2 @@
+# Archivo temporal para prueba de merge
+Este archivo puede ser eliminado después del merge.
