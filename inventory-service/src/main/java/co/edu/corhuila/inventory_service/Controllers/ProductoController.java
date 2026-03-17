@@ -5,6 +5,7 @@ package co.edu.corhuila.inventory_service.Controllers;
 import co.edu.corhuila.inventory_service.Dto.ProductoSinStockResponse;
 import co.edu.corhuila.inventory_service.Entity.Producto;
 import co.edu.corhuila.inventory_service.Service.ProductoService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +22,8 @@ public class ProductoController {
     }
     @PostMapping
     public ResponseEntity<Producto> crear(@RequestBody Producto producto) {
-        return ResponseEntity.ok(productoService.crearProducto(producto));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(productoService.crearProducto(producto));
     }
     @PutMapping("/{id}")
     public ResponseEntity<Producto> actualizarProducto(
@@ -34,9 +36,9 @@ public class ProductoController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> eliminarProducto(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminarProducto(@PathVariable Long id) {
         productoService.eliminarProducto(id);
-        return ResponseEntity.ok("Producto eliminado correctamente");
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping
