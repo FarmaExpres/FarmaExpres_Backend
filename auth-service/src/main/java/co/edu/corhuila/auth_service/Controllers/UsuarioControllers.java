@@ -5,6 +5,7 @@ import co.edu.corhuila.auth_service.DTO.UsuarioRequest;
 import co.edu.corhuila.auth_service.DTO.UsuarioResponse;
 import co.edu.corhuila.auth_service.Entity.Usuario;
 import co.edu.corhuila.auth_service.Service.UsuarioService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,7 +21,7 @@ public class UsuarioControllers {
     }
 
     @PostMapping
-    public UsuarioResponse crearUsuario(@RequestBody UsuarioRequest request) {
+    public ResponseEntity<UsuarioResponse> crearUsuario(@RequestBody UsuarioRequest request) {
 
         Usuario usuario = usuarioService.crearUsuario(
                 request.getNombre(),
@@ -29,12 +30,14 @@ public class UsuarioControllers {
                 request.getRol()
         );
 
-        return new UsuarioResponse(
+        UsuarioResponse response = new UsuarioResponse(
                 usuario.getId(),
                 usuario.getNombre(),
                 usuario.getEmail(),
                 usuario.getRol().getNombre()
         );
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PutMapping("/{id}/password")
