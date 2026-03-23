@@ -28,6 +28,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // SOLO LOGIN ES PUBLICO
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                        .requestMatchers("/status").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
 
                         .requestMatchers("/api/users/**").hasRole("ADMIN")
@@ -36,7 +37,7 @@ public class SecurityConfig {
                         // SOLO ADMIN
                         .requestMatchers("/api/binnacle/**").hasRole("ADMIN")
 
-                        // TODO LO DEMÁS REQUIERE AUTENTICACIÓN
+                       
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

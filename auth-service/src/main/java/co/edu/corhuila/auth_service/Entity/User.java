@@ -5,15 +5,15 @@ import jakarta.persistence.*;
 
 
 @Entity
-@Table(name = "usuarios")
-public class Usuario {
+@Table(name = "users")
+public class User{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
-    private String nombre;
+    private String name;
 
     @Column(nullable = false, unique = true)
     private String email;
@@ -23,32 +23,31 @@ public class Usuario {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private EstadoUsuario estado;
+    private UserStatus  State;
 
 
     @ManyToOne
-    @JoinColumn(name = "IDrol", nullable = false)
-    private Rol rol;
+    @JoinColumn(name = "IDrole", nullable = false)
+    private Role role;
 
-    public Usuario() {}
+    public User() {}
 
-    public Usuario(String nombre, String email, String password, Rol rol) {
-        this.nombre = nombre;
+    public User(String name, String email, String password, Role role) {
+        this.name = name;
         this.email = email;
         this.password = password;
-        this.rol = rol;
-        this.estado = EstadoUsuario.ACTIVO;
+        this.role = role;
+        this.State = UserStatus.Asset;
     }
 
     // Métodos de dominio
-    public void bloquear() {
-        this.estado = EstadoUsuario.BLOQUEADO;
+    public void BlockUser() {
+        this.State = UserStatus.Blocked;
     }
 
-    public void desbloquear() {
-        this.estado = EstadoUsuario.ACTIVO;
+    public void unlock() {
+        this.State = UserStatus.Asset;
     }
-
 
     public Long getId() {
         return id;
@@ -58,12 +57,12 @@ public class Usuario {
         this.id = id;
     }
 
-    public String getNombre() {
-        return nombre;
+    public String getName() {
+        return name;
     }
 
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getEmail() {
@@ -82,21 +81,19 @@ public class Usuario {
         this.password = password;
     }
 
-    public EstadoUsuario getEstado() {
-        return estado;
+    public UserStatus getState() {
+        return State;
     }
 
-    public void setEstado(EstadoUsuario estado) {
-        this.estado = estado;
+    public void setState(UserStatus state) {
+        State = state;
     }
 
-    public Rol getRol() {
-        return rol;
+    public Role getRole() {
+        return role;
     }
 
-    public void setRol(Rol rol) {
-        this.rol = rol;
+    public void setRole(Role role) {
+        this.role = role;
     }
-
-
 }
