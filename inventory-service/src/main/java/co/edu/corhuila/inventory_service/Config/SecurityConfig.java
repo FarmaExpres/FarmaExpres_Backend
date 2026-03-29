@@ -31,17 +31,28 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
 
 
-                        // ADMIN puede gestionar productos (crear, actualizar, eliminar y ver)
+                        // Públicas
                         .requestMatchers("/error").permitAll()
-
+                        .requestMatchers("/status").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
 
-                        // ADMIN y EMPLEADO pueden ver productos
-                        .requestMatchers(HttpMethod.GET, "/api/products/**").hasAnyRole("ADMIN","EMPLEADO")
+                        // Productos: ADMIN puede crear, actualizar y eliminar
+                         .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
+                         .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
+                         .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
+
+                        // Productos: ADMIN, FARMACEUTICO y AUDITOR pueden ver
+                        .requestMatchers(HttpMethod.GET, "/api/products/**")
+                        .hasAnyRole("ADMIN", "FARMACEUTICO", "AUDITOR")
+
+                        // Movimientos: ADMIN y AUDITOR pueden ver
+                        .requestMatchers(HttpMethod.GET, "/api/motions/**")
+                        .hasAnyRole("ADMIN", "AUDITOR")
+
+                        // Todo lo demás requiere autenticación
                         .anyRequest().authenticated()
+
+
                 )
                 .addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class);
 
