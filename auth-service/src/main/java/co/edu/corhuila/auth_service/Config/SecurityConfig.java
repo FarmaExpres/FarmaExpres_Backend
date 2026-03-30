@@ -32,24 +32,25 @@ public class SecurityConfig {
                         .requestMatchers("/status").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
 
-                        .requestMatchers("/api/users/**").hasRole("ADMIN")
-
-                        .requestMatchers(HttpMethod.GET, "/api/users/**").hasRole("AUDITOR")
-
-                        
-
-                        // Password endpoints
+                        // CAMBIO DE CONTRASEÑA: primero la ruta específica
                         .requestMatchers(HttpMethod.PUT, "/api/users/*/password")
                         .hasAnyRole("ADMIN", "AUDITOR", "FARMACEUTICO")
-                        
-                        // actualizar usuario
+
+                        // ACTUALIZAR USUARIO
                         .requestMatchers(HttpMethod.PUT, "/api/users/*/update")
                         .hasAnyRole("ADMIN", "AUDITOR", "FARMACEUTICO")
 
-                        
-                        // Binnacle endpoints
+                        // CONSULTAR USUARIOS
+                        .requestMatchers(HttpMethod.GET, "/api/users/**")
+                        .hasAnyRole("ADMIN", "AUDITOR")
+
+                        // BINNACLE
                         .requestMatchers("/api/binnacle/**")
                         .hasAnyRole("ADMIN", "AUDITOR")
+
+                        // RESTO DE /api/users/**
+                        .requestMatchers("/api/users/**")
+                        .hasRole("ADMIN")
                     
 
 

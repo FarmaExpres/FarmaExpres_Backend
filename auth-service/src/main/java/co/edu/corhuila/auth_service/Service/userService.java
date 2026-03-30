@@ -45,12 +45,17 @@ public class userService {
                              String password,
                              String nameRole) {
 
-        if (userRepository.existsByEmail(email)) {
-            throw new RuntimeException("El email ya está registrado");
+         if (userRepository.existsByEmail(email)) {
+                throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "El email ya está registrado"
+                );
         }
-
         Role role = rolRepository.findByName(nameRole)
-                .orElseThrow(() -> new RuntimeException("Rol no encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Rol no encontrado"
+                ));
 
         String Encryptedpassword = passwordEncoder.encode(password);
 
@@ -88,6 +93,8 @@ public class userService {
                         HttpStatus.NOT_FOUND,
                         "Usuario no encontrado"
                 ));
+
+           
 
         if (currentpassword == null || currentpassword.isBlank()) {
             throw new ResponseStatusException(
@@ -158,7 +165,10 @@ public class userService {
     // =========================
     public User blockUser(Long userId) {
     User user = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Usuario no encontrado"
+                ));
 
     user.BlockUser();
     User updatedUser = userRepository.save(user);
@@ -175,7 +185,10 @@ public class userService {
     // =========================
     public User unlockUser(Long userId) {
     User user = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Usuario no encontrado"
+                ));
 
     user.unlock();
     User updatedUser = userRepository.save(user);
@@ -195,11 +208,17 @@ public class userService {
 
     public User updateUser(Long userId, UpdateUserRequest request) {
     User user = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Usuario no encontrado"
+                ));
+                
     if (request.getEmail() != null && !request.getEmail().equals(user.getEmail())) {
         userRepository.findByEmail(request.getEmail()).ifPresent(existingUser -> {
-            throw new RuntimeException("El email ya está registrado");
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "El email ya está registrado"
+            );
         });
         user.setEmail(request.getEmail());
     }
@@ -210,7 +229,10 @@ public class userService {
 
     if (request.getRole() != null && !request.getRole().isBlank()) {
         Role role = rolRepository.findByName(request.getRole())
-                .orElseThrow(() -> new RuntimeException("Rol no encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Rol no encontrado"
+                ));
         user.setRole(role);
     }
 
