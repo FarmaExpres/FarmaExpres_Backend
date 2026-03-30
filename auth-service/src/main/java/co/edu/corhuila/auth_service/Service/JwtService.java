@@ -16,10 +16,11 @@ public class JwtService {
     private final String SECRET = "mi_clave_super_secreta_ultra_segura_de_256_bits_minimo_1234567890";
     private final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
 
-    public String generateToken(String email, String rol) {
+    public String generateToken(String email, String rol, String name) {
         return Jwts.builder()
                 .setSubject(email)
                 .claim("rol", rol)
+                .claim("name", name)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
                 .signWith(key, SignatureAlgorithm.HS256)

@@ -7,6 +7,8 @@ import co.edu.corhuila.auth_service.Entity.UserStatus;
 import co.edu.corhuila.auth_service.Entity.User;
 import co.edu.corhuila.auth_service.Repository.BinnacleRepository;
 import co.edu.corhuila.auth_service.Repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -16,6 +18,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class AuthService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthService.class);
+    private static final String INVALID_CREDENTIALS_MESSAGE = "Credenciales incorrectas";
 
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
@@ -42,23 +46,23 @@ public class AuthService {
         User user = userRepository.findByEmail(email).orElse(null);
 
         if (user == null) {
-            loginFailed(null, email);
+            registerLoginFailed(null, email);
             throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "Usuario no encontrado"
+                    HttpStatus.UNAUTHORIZED,
+                    INVALID_CREDENTIALS_MESSAGE
             );
         }
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            loginFailed(user.getId(), email);
+            registerLoginFailed(user.getId(), email);
             throw new ResponseStatusException(
                     HttpStatus.UNAUTHORIZED,
-                    "Credenciales inválidas"
+                    INVALID_CREDENTIALS_MESSAGE
             );
         }
 
         if (user.getState() != UserStatus.Asset) {
-            loginFailed(user.getId(), email);
+            registerLoginFailed(user.getId(), email);
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
                     "Usuario no activo"
@@ -69,14 +73,16 @@ public class AuthService {
 
         String token = jwtService.generateToken(
                 user.getEmail(),
-                user.getRole().getName()
+                user.getRole().getName(),
+                user.getName()
         );
 
         return new LoginResponseDto(
                 token,
                 "Bearer",
                 user.getEmail(),
-                user.getRole().getName()
+                user.getRole().getName(),
+                user.getName()
         );
     }
 
@@ -94,10 +100,15 @@ public class AuthService {
     // =========================
 // Registrar Login Fallido
 // =========================
-    private void loginFailed(Long usuarioId, String email) {
-        binnacleRepository.save(
-                new Binnacle(usuarioId, "LOGIN_FALLIDO - " + email)
-        );
+    private void registerLoginFailed(Long usuarioId, String email) {
+        try {
+            binnacleRepository.save(
+                    new Binnacle(usuarioId, "LOGIN_FALLIDO - " + email)
+            );
+        } catch (Exception ex) {
+            // A failed audit write must not change authentication semantics.
+            LOGGER.warn("No se pudo registrar LOGIN_FALLIDO para {}", email, ex);
+        }
     }
 
 }

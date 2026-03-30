@@ -12,8 +12,10 @@ import co.edu.corhuila.auth_service.Repository.UserRepository;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class userService {
@@ -82,10 +84,44 @@ public class userService {
     ) {
 
         User user = userRepository.findById(usurId)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Usuario no encontrado"
+                ));
+
+        if (currentpassword == null || currentpassword.isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "La contraseña actual es obligatoria"
+            );
+        }
+
+        if (newPassword == null || newPassword.isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "La nueva contraseña es obligatoria"
+            );
+        }
+
+        if (newPassword.length() < 8) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "La nueva contraseña debe tener al menos 8 caracteres"
+            );
+        }
 
         if (!passwordEncoder.matches(currentpassword, user.getPassword())) {
-            throw new RuntimeException("Contraseña actual incorrecta");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Contraseña actual incorrecta"
+            );
+        }
+
+        if (passwordEncoder.matches(newPassword, user.getPassword())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "La nueva contraseña debe ser diferente de la contraseña actual"
+            );
         }
 
         user.setPassword(passwordEncoder.encode(newPassword));
