@@ -5,12 +5,12 @@ package co.edu.corhuila.inventory_service.Dto;
 
 import co.edu.corhuila.inventory_service.Entity.Motion;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public class MotionResponse {
 
     private Long id;
-    private LocalDateTime dateTime;
+    private Instant dateTime;
     private String type;
     private Integer amount;
     private Long productId;
@@ -23,7 +23,7 @@ public class MotionResponse {
     private String status;
     private Long markedByUserId;
     private String markedByUserName;
-    private LocalDateTime markedAt;
+    private Instant markedAt;
     private String observation;
 
     private static final String SYSTEM_USER_NAME = "SYSTEM_INIT";
@@ -54,11 +54,11 @@ public class MotionResponse {
         this.amount = amount;
     }
 
-    public LocalDateTime getDateTime() {
+    public Instant getDateTime() {
         return dateTime;
     }
 
-    public void setDateTime(LocalDateTime dateTime) {
+    public void setDateTime(Instant dateTime) {
         this.dateTime = dateTime;
     }
 
@@ -142,11 +142,11 @@ public class MotionResponse {
         this.markedByUserName = markedByUserName;
     }
 
-    public LocalDateTime getMarkedAt() {
+    public Instant getMarkedAt() {
         return markedAt;
     }
 
-    public void setMarkedAt(LocalDateTime markedAt) {
+    public void setMarkedAt(Instant markedAt) {
         this.markedAt = markedAt;
     }
 
