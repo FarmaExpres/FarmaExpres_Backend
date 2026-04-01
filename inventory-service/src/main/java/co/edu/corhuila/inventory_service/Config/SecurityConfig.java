@@ -1,4 +1,4 @@
-﻿package co.edu.corhuila.inventory_service.Config;
+package co.edu.corhuila.inventory_service.Config;
 
 import co.edu.corhuila.inventory_service.Service.JwtFilter;
 import co.edu.corhuila.inventory_service.Service.JwtService;
@@ -44,8 +44,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/products/**")
                         .hasAnyRole("ADMIN", "FARMACEUTICO", "AUDITOR")
 
-                        // Motions: ADMIN and AUDITOR can view
+                        // Motions/Movements: ADMIN and AUDITOR can view
+                        .requestMatchers(HttpMethod.GET, "/api/movements/**")
+                        .hasAnyRole("ADMIN", "AUDITOR")
                         .requestMatchers(HttpMethod.GET, "/api/motions/**")
+                        .hasAnyRole("ADMIN", "AUDITOR")
+                        .requestMatchers(HttpMethod.GET, "/api/Motion/**")
                         .hasAnyRole("ADMIN", "AUDITOR")
 
                         // Everything else requires authentication
@@ -57,3 +61,4 @@ public class SecurityConfig {
         return http.build();
     }
 }
+
