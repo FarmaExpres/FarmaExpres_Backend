@@ -1,0 +1,183 @@
+package co.edu.corhuila.inventory_service.Dto;
+
+
+
+
+import co.edu.corhuila.inventory_service.Entity.Motion;
+
+import java.time.LocalDateTime;
+
+public class MotionResponse {
+
+    private Long id;
+    private LocalDateTime dateTime;
+    private String type;
+    private Integer amount;
+    private Long productId;
+    private String productName;
+    private String reason;
+    private Long userId;
+    private String userName;
+    private String userEmail;
+    private String userRole;
+    private String status;
+    private Long markedByUserId;
+    private String markedByUserName;
+    private LocalDateTime markedAt;
+    private String observation;
+
+    private static final String SYSTEM_USER_NAME = "SYSTEM_INIT";
+    private static final String SYSTEM_USER_EMAIL = "system@farmaexpres.local";
+    private static final String SYSTEM_USER_ROLE = "SYSTEM";
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public Integer getAmount() {
+        return amount;
+    }
+
+    public void setAmount(Integer amount) {
+        this.amount = amount;
+    }
+
+    public LocalDateTime getDateTime() {
+        return dateTime;
+    }
+
+    public void setDateTime(LocalDateTime dateTime) {
+        this.dateTime = dateTime;
+    }
+
+    public Long getProductId() {
+        return productId;
+    }
+
+    public void setProductId(Long productId) {
+        this.productId = productId;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public String getUserEmail() {
+        return userEmail;
+    }
+
+    public void setUserEmail(String userEmail) {
+        this.userEmail = userEmail;
+    }
+
+    public String getUserRole() {
+        return userRole;
+    }
+
+    public void setUserRole(String userRole) {
+        this.userRole = userRole;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Long getMarkedByUserId() {
+        return markedByUserId;
+    }
+
+    public void setMarkedByUserId(Long markedByUserId) {
+        this.markedByUserId = markedByUserId;
+    }
+
+    public String getMarkedByUserName() {
+        return markedByUserName;
+    }
+
+    public void setMarkedByUserName(String markedByUserName) {
+        this.markedByUserName = markedByUserName;
+    }
+
+    public LocalDateTime getMarkedAt() {
+        return markedAt;
+    }
+
+    public void setMarkedAt(LocalDateTime markedAt) {
+        this.markedAt = markedAt;
+    }
+
+    public String getObservation() {
+        return observation;
+    }
+
+    public void setObservation(String observation) {
+        this.observation = observation;
+    }
+
+    public MotionResponse(Motion m) {
+        this.id = m.getId();
+        this.type = m.getType().name();
+        this.amount = m.getAmount();
+        this.dateTime = m.getDateTime();
+        this.productId = m.getProduct().getId();
+        this.productName = m.getProduct().getName();
+        this.reason = m.getReason();
+        this.userId = m.getUserId();
+        this.userName = firstNotBlank(m.getUserName(), SYSTEM_USER_NAME);
+        this.userEmail = firstNotBlank(m.getUserEmail(), SYSTEM_USER_EMAIL);
+        this.userRole = firstNotBlank(m.getUserRole(), SYSTEM_USER_ROLE);
+        this.status = m.getStatus() != null ? m.getStatus().name() : "NORMAL";
+        this.markedByUserId = m.getMarkedByUserId();
+        this.markedByUserName = m.getMarkedByUserName();
+        this.markedAt = m.getMarkedAt();
+        this.observation = m.getObservation();
+    }
+
+    private String firstNotBlank(String value, String fallback) {
+        return value == null || value.isBlank() ? fallback : value;
+    }
+}
