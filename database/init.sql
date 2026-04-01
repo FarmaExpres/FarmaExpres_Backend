@@ -54,7 +54,7 @@ CREATE TABLE binnacle (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL,
     action VARCHAR(255) NOT NULL,
-    date_time TIMESTAMP NOT NULL DEFAULT NOW()
+    date_time TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- =========================================
@@ -108,7 +108,7 @@ CREATE TABLE motion (
     id BIGSERIAL PRIMARY KEY,
     type VARCHAR(20) NOT NULL,
     amount INTEGER NOT NULL,
-    date_time TIMESTAMP NOT NULL DEFAULT NOW(),
+    date_time TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     reason VARCHAR(255),
     user_id BIGINT,
     user_name VARCHAR(150),
@@ -117,7 +117,7 @@ CREATE TABLE motion (
     status VARCHAR(20) NOT NULL DEFAULT 'NORMAL',
     marked_by_user_id BIGINT,
     marked_by_user_name VARCHAR(150),
-    marked_at TIMESTAMP,
+    marked_at TIMESTAMPTZ,
     observation TEXT,
     produc_id BIGINT,
 

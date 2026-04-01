@@ -4,7 +4,7 @@ package co.edu.corhuila.auth_service.Entity;
 
 import jakarta.persistence.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "binnacle")
@@ -22,14 +22,14 @@ public class Binnacle {
     private String action;
 
     @Column(nullable = false)
-    private LocalDateTime dateTime;
+    private Instant dateTime;
 
     public Binnacle() {}
 
     public Binnacle(Long userId, String action) {
         this.userId = userId;
         this.action = action;
-        this.dateTime = LocalDateTime.now();
+        this.dateTime = Instant.now();
     }
 
     public Long getId() {
@@ -56,11 +56,11 @@ public class Binnacle {
         this.action = action;
     }
 
-    public LocalDateTime getDateTime() {
+    public Instant getDateTime() {
         return dateTime;
     }
 
-    public void setDateTime(LocalDateTime dateTime) {
+    public void setDateTime(Instant dateTime) {
         this.dateTime = dateTime;
     }
 }

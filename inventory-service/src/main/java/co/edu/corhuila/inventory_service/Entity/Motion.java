@@ -4,7 +4,7 @@ package co.edu.corhuila.inventory_service.Entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "motion")
@@ -23,7 +23,7 @@ public class Motion {
     private Integer amount;
 
     @Column(name = "date_time", nullable = false)
-    private LocalDateTime dateTime;
+    private Instant dateTime;
 
     @Column(name = "reason")
     private String reason;
@@ -51,7 +51,7 @@ public class Motion {
     private String markedByUserName;
 
     @Column(name = "marked_at")
-    private LocalDateTime markedAt;
+    private Instant markedAt;
 
     @Column(name = "observation")
     private String observation;
@@ -80,7 +80,7 @@ public class Motion {
         this.Type = Type;
         this.amount = amount;
         this.product = product;
-        this.dateTime = LocalDateTime.now();
+        this.dateTime = Instant.now();
         this.reason = reason;
         this.userId = userId;
         this.userName = userName;
@@ -113,11 +113,11 @@ public class Motion {
         this.amount = amount;
     }
 
-    public LocalDateTime getDateTime() {
+    public Instant getDateTime() {
         return dateTime;
     }
 
-    public void setDateTime(LocalDateTime dateTime) {
+    public void setDateTime(Instant dateTime) {
         this.dateTime = dateTime;
     }
 
@@ -193,11 +193,11 @@ public class Motion {
         this.markedByUserName = markedByUserName;
     }
 
-    public LocalDateTime getMarkedAt() {
+    public Instant getMarkedAt() {
         return markedAt;
     }
 
-    public void setMarkedAt(LocalDateTime markedAt) {
+    public void setMarkedAt(Instant markedAt) {
         this.markedAt = markedAt;
     }
 
