@@ -1,4 +1,4 @@
-package co.edu.corhuila.auth_service.Service;
+﻿package co.edu.corhuila.auth_service.Service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -14,7 +14,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -30,12 +30,12 @@ class JwtFilterTest {
     private FilterChain filterChain;
 
     @AfterEach
-    void limpiarContextoSeguridad() {
+    void clearSecurityContext() {
         SecurityContextHolder.clearContext();
     }
 
     @Test
-    void debeResponder401CuandoTokenEsInvalido() throws Exception {
+    void whenTokenIsInvalid() throws Exception {
         JwtFilter jwtFilter = new JwtFilter(jwtService);
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -52,7 +52,7 @@ class JwtFilterTest {
     }
 
     @Test
-    void debeContinuarCadenaCuandoTokenEsValido() throws Exception {
+    void whenTokenIsValid() throws Exception {
         JwtFilter jwtFilter = new JwtFilter(jwtService);
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
