@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/Motion")
 public class MotionController {
 
     private final MotionService motionService;
@@ -23,7 +22,7 @@ public class MotionController {
 
 
 
-    @GetMapping
+    @GetMapping({"/api/movements", "/api/motions", "/api/Motion"})
     public ResponseEntity<List<MotionResponse>> listMotion() {
         return ResponseEntity.ok(motionService.listMotion());
     }

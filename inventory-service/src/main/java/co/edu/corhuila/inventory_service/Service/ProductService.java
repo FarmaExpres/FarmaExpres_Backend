@@ -6,8 +6,12 @@ import co.edu.corhuila.inventory_service.Entity.Product;
 import co.edu.corhuila.inventory_service.Entity.MovementType;
 import co.edu.corhuila.inventory_service.Repository.MotionRepository;
 import co.edu.corhuila.inventory_service.Repository.ProductRepository;
+import io.jsonwebtoken.Claims;
 import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -15,6 +19,9 @@ import java.util.List;
 
 @Service
 public class ProductService {
+    private static final String SYSTEM_USER_NAME = "SYSTEM_INIT";
+    private static final String SYSTEM_USER_EMAIL = "system@farmaexpres.local";
+    private static final String SYSTEM_USER_ROLE = "SYSTEM";
 
     private final ProductRepository productRepository;
     private final MotionRepository motionRepository;
@@ -37,11 +44,17 @@ public class ProductService {
         }
 
         Product productSaved = productRepository.save(product);
+        MotionActorContext actor = extractMotionActor();
 
         Motion motion = new Motion(
                 MovementType.Entrance,
                 productSaved.getStock(),
-                productSaved
+                productSaved,
+                "Creación de producto",
+                actor.userId(),
+                actor.userName(),
+                actor.userEmail(),
+                actor.userRole()
         );
         motionRepository.save(motion);
 
@@ -75,26 +88,36 @@ public class ProductService {
         product.setExpirationDate(updatedData.getExpirationDate());
 
         Product productSaved = productRepository.save(product);
+        MotionActorContext actor = extractMotionActor();
 
         Integer newStock = updatedData.getStock();
         MovementType movementType;
         Integer quantityMovement;
+        String reason;
 
         if (newStock > previousStock) {
             movementType = MovementType.Entrance;
             quantityMovement = newStock - previousStock;
+            reason = "Entrada por ajuste de inventario";
         } else if (newStock < previousStock) {
             movementType = MovementType.Exit;
             quantityMovement = previousStock - newStock;
+            reason = "Salida por ajuste de inventario";
         } else {
             movementType = MovementType.Updated;
             quantityMovement = 0;
+            reason = "Actualización de datos del producto";
         }
 
         Motion motion = new Motion(
                 movementType,
                 quantityMovement,
-                productSaved
+                productSaved,
+                reason,
+                actor.userId(),
+                actor.userName(),
+                actor.userEmail(),
+                actor.userRole()
         );
         motionRepository.save(motion);
 
@@ -112,11 +135,17 @@ public class ProductService {
 
         product.setActive(false);
         productRepository.save(product);
+        MotionActorContext actor = extractMotionActor();
 
         Motion motion = new Motion(
                 MovementType.Deleted,
                 product.getStock(),
-                product
+                product,
+                "Eliminación lógica del producto",
+                actor.userId(),
+                actor.userName(),
+                actor.userEmail(),
+                actor.userRole()
         );
         motionRepository.save(motion);
     }
@@ -154,4 +183,35 @@ public class ProductService {
             );
         }
     }
+
+    private MotionActorContext extractMotionActor() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return new MotionActorContext(null, SYSTEM_USER_NAME, SYSTEM_USER_EMAIL, SYSTEM_USER_ROLE);
+        }
+
+        String email = authentication.getName();
+        String role = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .findFirst()
+                .map(authority -> authority.replace("ROLE_", ""))
+                .orElse(SYSTEM_USER_ROLE);
+
+        String name = null;
+        Long userId = null;
+        Object details = authentication.getDetails();
+        if (details instanceof Claims claims) {
+            name = claims.get("name", String.class);
+            userId = claims.get("userId", Long.class);
+        }
+
+        return new MotionActorContext(
+                userId,
+                name == null || name.isBlank() ? SYSTEM_USER_NAME : name,
+                email == null || email.isBlank() ? SYSTEM_USER_EMAIL : email,
+                role == null || role.isBlank() ? SYSTEM_USER_ROLE : role
+        );
+    }
+
+    private record MotionActorContext(Long userId, String userName, String userEmail, String userRole) {}
 }

@@ -1,4 +1,4 @@
-﻿package co.edu.corhuila.inventory_service.Service;
+package co.edu.corhuila.inventory_service.Service;
 
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -49,3 +49,4 @@ class JwtFilterTest {
         verify(filterChain, never()).doFilter(any(), any());
     }
 }
+

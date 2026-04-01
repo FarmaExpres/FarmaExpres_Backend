@@ -54,7 +54,7 @@ CREATE TABLE binnacle (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL,
     action VARCHAR(255) NOT NULL,
-    date_time TIMESTAMP NOT NULL DEFAULT NOW()
+    date_time TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- =========================================
@@ -108,7 +108,17 @@ CREATE TABLE motion (
     id BIGSERIAL PRIMARY KEY,
     type VARCHAR(20) NOT NULL,
     amount INTEGER NOT NULL,
-    date_time TIMESTAMP NOT NULL DEFAULT NOW(),
+    date_time TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    reason VARCHAR(255),
+    user_id BIGINT,
+    user_name VARCHAR(150),
+    user_email VARCHAR(180),
+    user_role VARCHAR(50),
+    status VARCHAR(20) NOT NULL DEFAULT 'NORMAL',
+    marked_by_user_id BIGINT,
+    marked_by_user_name VARCHAR(150),
+    marked_at TIMESTAMPTZ,
+    observation TEXT,
     produc_id BIGINT,
 
     CONSTRAINT fk_motion_product
@@ -140,6 +150,6 @@ INSERT INTO product ( name, code, stock, unitprice, asset, minimumstock, expirat
 -- SAMPLE DATA: motion
 -- Initial records linked to products
 -- =========================================
-INSERT INTO motion (type, amount, produc_id)
-SELECT 'Entrance', stock, id
+INSERT INTO motion (type, amount, reason, user_name, user_email, user_role, status, produc_id)
+SELECT 'Entrance', stock, 'Carga inicial de catálogo', 'SYSTEM_INIT', 'system@farmaexpres.local', 'SYSTEM', 'NORMAL', id
 FROM product;

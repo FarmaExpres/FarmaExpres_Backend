@@ -1,4 +1,4 @@
-﻿package co.edu.corhuila.auth_service.Service;
+package co.edu.corhuila.auth_service.Service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -68,3 +68,4 @@ class JwtFilterTest {
         verify(filterChain).doFilter(any(), any());
     }
 }
+
