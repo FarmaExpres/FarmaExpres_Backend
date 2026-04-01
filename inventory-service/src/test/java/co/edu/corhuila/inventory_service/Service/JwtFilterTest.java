@@ -1,4 +1,4 @@
-package co.edu.corhuila.inventory_service.Service;
+﻿package co.edu.corhuila.inventory_service.Service;
 
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -28,12 +28,12 @@ class JwtFilterTest {
     private FilterChain filterChain;
 
     @AfterEach
-    void clearContextSecurity() {
+    void clearSecurityContext() {
         SecurityContextHolder.clearContext();
     }
 
     @Test
-    void WhenTokenIsInvalid() throws Exception {
+    void whenTokenIsInvalid() throws Exception {
         JwtFilter jwtFilter = new JwtFilter(jwtService);
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();

@@ -1,4 +1,4 @@
-package co.edu.corhuila.inventory_service.Config;
+﻿package co.edu.corhuila.inventory_service.Config;
 
 import co.edu.corhuila.inventory_service.Service.JwtFilter;
 import co.edu.corhuila.inventory_service.Service.JwtService;
@@ -30,28 +30,26 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
 
-
-                        // Públicas
+                        // Public endpoints
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/status").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
 
-                        // Productos: ADMIN puede crear, actualizar y eliminar
-                         .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
-                         .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
-                         .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
+                        // Products: ADMIN can create, update and delete
+                        .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
 
-                        // Productos: ADMIN, FARMACEUTICO y AUDITOR pueden ver
+                        // Products: ADMIN, PHARMACIST and AUDITOR can view
                         .requestMatchers(HttpMethod.GET, "/api/products/**")
                         .hasAnyRole("ADMIN", "FARMACEUTICO", "AUDITOR")
 
-                        // Movimientos: ADMIN y AUDITOR pueden ver
+                        // Motions: ADMIN and AUDITOR can view
                         .requestMatchers(HttpMethod.GET, "/api/motions/**")
                         .hasAnyRole("ADMIN", "AUDITOR")
 
-                        // Todo lo demás requiere autenticación
+                        // Everything else requires authentication
                         .anyRequest().authenticated()
-
 
                 )
                 .addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class);

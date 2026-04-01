@@ -1,4 +1,4 @@
-package co.edu.corhuila.auth_service.Service;
+﻿package co.edu.corhuila.auth_service.Service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -30,12 +30,12 @@ class JwtFilterTest {
     private FilterChain filterChain;
 
     @AfterEach
-    void limpiarContextoSeguridad() {
+    void clearSecurityContext() {
         SecurityContextHolder.clearContext();
     }
 
     @Test
-    void WhenTokenIsInvalid() throws Exception {
+    void whenTokenIsInvalid() throws Exception {
         JwtFilter jwtFilter = new JwtFilter(jwtService);
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -52,7 +52,7 @@ class JwtFilterTest {
     }
 
     @Test
-    void WhenTokenIsValid() throws Exception {
+    void whenTokenIsValid() throws Exception {
         JwtFilter jwtFilter = new JwtFilter(jwtService);
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
