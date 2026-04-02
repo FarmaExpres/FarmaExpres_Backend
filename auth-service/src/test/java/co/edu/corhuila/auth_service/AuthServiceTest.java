@@ -1,6 +1,6 @@
 package co.edu.corhuila.auth_service;
 
-import co.edu.corhuila.auth_service.Repository.UsuarioRepository;
+import co.edu.corhuila.auth_service.Repository.UserRepository;
 import co.edu.corhuila.auth_service.Service.AuthService;
 import co.edu.corhuila.auth_service.Service.JwtService;
 import org.junit.jupiter.api.Test;
@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class AuthServiceTest {
 
     @Mock
-    private UsuarioRepository usuarioRepository;
+    private UserRepository userRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -28,7 +28,7 @@ class AuthServiceTest {
     private AuthService authService;
 
     @Test
-    void deberiaLanzarErrorSiUsuarioNoExiste() {
+    void ErrorIfUserDoesNotExist() {
         assertThrows(RuntimeException.class, () ->
                 authService.login("noexiste@correo.com", "123456"));
     }

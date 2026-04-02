@@ -28,12 +28,12 @@ class JwtFilterTest {
     private FilterChain filterChain;
 
     @AfterEach
-    void limpiarContextoSeguridad() {
+    void clearSecurityContext() {
         SecurityContextHolder.clearContext();
     }
 
     @Test
-    void debeResponder401CuandoTokenEsInvalido() throws Exception {
+    void whenTokenIsInvalid() throws Exception {
         JwtFilter jwtFilter = new JwtFilter(jwtService);
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
