@@ -1,11 +1,14 @@
 package co.edu.corhuila.inventory_service.Service;
 
+import co.edu.corhuila.inventory_service.Dto.AdjustmentDetailItem;
 import co.edu.corhuila.inventory_service.Dto.ProductOutOfStockResponse;
+import co.edu.corhuila.inventory_service.Entity.MovementType;
 import co.edu.corhuila.inventory_service.Entity.Motion;
 import co.edu.corhuila.inventory_service.Entity.Product;
-import co.edu.corhuila.inventory_service.Entity.MovementType;
 import co.edu.corhuila.inventory_service.Repository.MotionRepository;
 import co.edu.corhuila.inventory_service.Repository.ProductRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
@@ -15,13 +18,21 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 
 @Service
 public class ProductService {
     private static final String SYSTEM_USER_NAME = "SYSTEM_INIT";
     private static final String SYSTEM_USER_EMAIL = "system@farmaexpres.local";
     private static final String SYSTEM_USER_ROLE = "SYSTEM";
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final ProductRepository productRepository;
     private final MotionRepository motionRepository;
@@ -79,7 +90,11 @@ public class ProductService {
 
         validateProductData(updatedData);
 
+        String previousName = product.getName();
+        BigDecimal previousUnitPrice = product.getUnitPrice();
         Integer previousStock = product.getStock();
+        Integer previousMinimumStock = product.getMinimumStock();
+        LocalDate previousExpirationDate = product.getExpirationDate();
 
         product.setName(updatedData.getName());
         product.setUnitPrice(updatedData.getUnitPrice());
@@ -87,39 +102,63 @@ public class ProductService {
         product.setMinimumStock(updatedData.getMinimumStock());
         product.setExpirationDate(updatedData.getExpirationDate());
 
+        Integer newStock = updatedData.getStock();
+        boolean stockChanged = !Objects.equals(newStock, previousStock);
+        boolean nonStockChanges = !Objects.equals(previousName, updatedData.getName())
+                || !areBigDecimalValuesEqual(previousUnitPrice, updatedData.getUnitPrice())
+                || !Objects.equals(previousMinimumStock, updatedData.getMinimumStock())
+                || !Objects.equals(previousExpirationDate, updatedData.getExpirationDate());
+
+        if (!stockChanged && !nonStockChanges) {
+            return product;
+        }
+
         Product productSaved = productRepository.save(product);
         MotionActorContext actor = extractMotionActor();
 
-        Integer newStock = updatedData.getStock();
-        MovementType movementType;
-        Integer quantityMovement;
-        String reason;
+        if (stockChanged) {
+            MovementType stockMovementType = newStock > previousStock ? MovementType.Entrance : MovementType.Exit;
+            Integer stockMovementAmount = Math.abs(newStock - previousStock);
+            String stockReason = newStock > previousStock
+                    ? "Entrada por ajuste de inventario"
+                    : "Salida por ajuste de inventario";
 
-        if (newStock > previousStock) {
-            movementType = MovementType.Entrance;
-            quantityMovement = newStock - previousStock;
-            reason = "Entrada por ajuste de inventario";
-        } else if (newStock < previousStock) {
-            movementType = MovementType.Exit;
-            quantityMovement = previousStock - newStock;
-            reason = "Salida por ajuste de inventario";
-        } else {
-            movementType = MovementType.Updated;
-            quantityMovement = 0;
-            reason = "Actualización de datos del producto";
+            Motion stockMotion = new Motion(
+                    stockMovementType,
+                    stockMovementAmount,
+                    productSaved,
+                    stockReason,
+                    actor.userId(),
+                    actor.userName(),
+                    actor.userEmail(),
+                    actor.userRole()
+            );
+            motionRepository.save(stockMotion);
         }
 
-        Motion motion = new Motion(
-                movementType,
-                quantityMovement,
-                productSaved,
-                reason,
-                actor.userId(),
-                actor.userName(),
-                actor.userEmail(),
-                actor.userRole()
-        );
-        motionRepository.save(motion);
+        if (nonStockChanges) {
+            Motion updatedMotion = new Motion(
+                    MovementType.Updated,
+                    0,
+                    productSaved,
+                    "Ajuste de datos del producto",
+                    actor.userId(),
+                    actor.userName(),
+                    actor.userEmail(),
+                    actor.userRole()
+            );
+
+            List<AdjustmentDetailItem> adjustmentDetail = buildAdjustmentDetail(
+                    previousName,
+                    previousUnitPrice,
+                    previousMinimumStock,
+                    previousExpirationDate,
+                    updatedData
+            );
+            updatedMotion.setAdjustmentSummary(buildAdjustmentSummary(adjustmentDetail));
+            updatedMotion.setAdjustmentDetail(serializeAdjustmentDetail(adjustmentDetail));
+            motionRepository.save(updatedMotion);
+        }
 
         return productSaved;
     }
@@ -211,6 +250,104 @@ public class ProductService {
                 email == null || email.isBlank() ? SYSTEM_USER_EMAIL : email,
                 role == null || role.isBlank() ? SYSTEM_USER_ROLE : role
         );
+    }
+
+    private List<AdjustmentDetailItem> buildAdjustmentDetail(
+            String previousName,
+            BigDecimal previousUnitPrice,
+            Integer previousMinimumStock,
+            LocalDate previousExpirationDate,
+            Product updatedData
+    ) {
+        List<AdjustmentDetailItem> detail = new ArrayList<>();
+
+        if (!Objects.equals(previousName, updatedData.getName())) {
+            detail.add(new AdjustmentDetailItem(
+                    "nombre",
+                    "Nombre",
+                    previousName,
+                    updatedData.getName(),
+                    "text"
+            ));
+        }
+
+        if (!areBigDecimalValuesEqual(previousUnitPrice, updatedData.getUnitPrice())) {
+            detail.add(new AdjustmentDetailItem(
+                    "precio",
+                    "Precio",
+                    previousUnitPrice,
+                    updatedData.getUnitPrice(),
+                    "currency"
+            ));
+        }
+
+        if (!Objects.equals(previousMinimumStock, updatedData.getMinimumStock())) {
+            detail.add(new AdjustmentDetailItem(
+                    "stockMinimo",
+                    "Stock mínimo",
+                    previousMinimumStock,
+                    updatedData.getMinimumStock(),
+                    "number"
+            ));
+        }
+
+        if (!Objects.equals(previousExpirationDate, updatedData.getExpirationDate())) {
+            detail.add(new AdjustmentDetailItem(
+                    "fechaVencimiento",
+                    "Fecha de vencimiento",
+                    previousExpirationDate != null ? previousExpirationDate.toString() : null,
+                    updatedData.getExpirationDate() != null ? updatedData.getExpirationDate().toString() : null,
+                    "date"
+            ));
+        }
+
+        return detail;
+    }
+
+    private String buildAdjustmentSummary(List<AdjustmentDetailItem> adjustmentDetail) {
+        return adjustmentDetail.stream()
+                .map(item -> item.getLabel() + ": "
+                        + formatValueForSummary(item.getBefore(), item.getFormat())
+                        + " -> "
+                        + formatValueForSummary(item.getAfter(), item.getFormat()))
+                .reduce((left, right) -> left + "; " + right)
+                .orElse(null);
+    }
+
+    private String formatValueForSummary(Object value, String format) {
+        if (value == null) {
+            return "null";
+        }
+
+        if ("currency".equals(format)) {
+            DecimalFormatSymbols symbols = new DecimalFormatSymbols(new Locale("es", "CO"));
+            symbols.setGroupingSeparator('.');
+            DecimalFormat decimalFormat = new DecimalFormat("#,##0.##", symbols);
+            return "$" + decimalFormat.format(value);
+        }
+
+        return String.valueOf(value);
+    }
+
+    private String serializeAdjustmentDetail(List<AdjustmentDetailItem> adjustmentDetail) {
+        try {
+            return OBJECT_MAPPER.writeValueAsString(adjustmentDetail);
+        } catch (JsonProcessingException ex) {
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "No se pudo serializar el detalle del ajuste"
+            );
+        }
+    }
+
+    private boolean areBigDecimalValuesEqual(BigDecimal left, BigDecimal right) {
+        if (left == null && right == null) {
+            return true;
+        }
+        if (left == null || right == null) {
+            return false;
+        }
+        return left.compareTo(right) == 0;
     }
 
     private record MotionActorContext(Long userId, String userName, String userEmail, String userRole) {}
