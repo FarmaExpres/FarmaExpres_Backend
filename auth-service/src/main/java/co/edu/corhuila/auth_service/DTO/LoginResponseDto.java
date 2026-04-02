@@ -9,14 +9,16 @@ public class LoginResponseDto {
     private String type;
     private String email;
     private String role;
+    private String name;
 
     public LoginResponseDto() {}
 
-    public LoginResponseDto(String token, String type, String email, String role) {
+    public LoginResponseDto(String token, String type, String email, String role, String name) {
         this.token = token;
         this.type = type;
         this.email = email;
         this.role = role;
+        this.name = name;
     }
 
     public void setToken(String token) {
@@ -33,5 +35,9 @@ public class LoginResponseDto {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }

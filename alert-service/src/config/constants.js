@@ -1,0 +1,17 @@
+const ALERT_TYPES = {
+  EXPIRING_SOON: "EXPIRING_SOON",
+  EXPIRED: "EXPIRED",
+  LOW_STOCK: "LOW_STOCK",
+  OUT_OF_STOCK: "OUT_OF_STOCK",
+};
+
+const ALERT_SEVERITIES = {
+  HIGH: "HIGH",
+  MEDIUM: "MEDIUM",
+  LOW: "LOW",
+};
+
+module.exports = {
+  ALERT_TYPES,
+  ALERT_SEVERITIES,
+};
