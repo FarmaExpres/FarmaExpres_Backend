@@ -9,6 +9,7 @@ import co.edu.corhuila.auth_service.Entity.User;
 import co.edu.corhuila.auth_service.Repository.BinnacleRepository;
 import co.edu.corhuila.auth_service.Repository.RoleRepository;
 import co.edu.corhuila.auth_service.Repository.UserRepository;
+import co.edu.corhuila.auth_service.Validation.EmailValidator;
 
 import java.util.List;
 
@@ -44,6 +45,7 @@ public class userService {
                              String email,
                              String password,
                              String nameRole) {
+         EmailValidator.validateOrThrow(email);
 
          if (userRepository.existsByEmail(email)) {
                 throw new ResponseStatusException(
@@ -214,6 +216,7 @@ public class userService {
                 ));
                 
     if (request.getEmail() != null && !request.getEmail().equals(user.getEmail())) {
+        EmailValidator.validateOrThrow(request.getEmail());
         userRepository.findByEmail(request.getEmail()).ifPresent(existingUser -> {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,

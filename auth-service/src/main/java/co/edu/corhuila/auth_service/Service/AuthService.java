@@ -7,6 +7,7 @@ import co.edu.corhuila.auth_service.Entity.UserStatus;
 import co.edu.corhuila.auth_service.Entity.User;
 import co.edu.corhuila.auth_service.Repository.BinnacleRepository;
 import co.edu.corhuila.auth_service.Repository.UserRepository;
+import co.edu.corhuila.auth_service.Validation.EmailValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +44,8 @@ public class AuthService {
     // =========================
 
     public LoginResponseDto login(String email, String password) {
+        EmailValidator.validateOrThrow(email);
+
         User user = userRepository.findByEmail(email).orElse(null);
 
         if (user == null) {
