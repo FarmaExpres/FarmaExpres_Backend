@@ -2,11 +2,13 @@ package co.edu.corhuila.auth_service.Service;
 
 
 import co.edu.corhuila.auth_service.DTO.LoginResponseDto;
-import co.edu.corhuila.auth_service.Entity.Bitacora;
-import co.edu.corhuila.auth_service.Entity.EstadoUsuario;
-import co.edu.corhuila.auth_service.Entity.Usuario;
-import co.edu.corhuila.auth_service.Repository.BitacoraRepository;
-import co.edu.corhuila.auth_service.Repository.UsuarioRepository;
+import co.edu.corhuila.auth_service.Entity.Binnacle;
+import co.edu.corhuila.auth_service.Entity.UserStatus;
+import co.edu.corhuila.auth_service.Entity.User;
+import co.edu.corhuila.auth_service.Repository.BinnacleRepository;
+import co.edu.corhuila.auth_service.Repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -16,21 +18,23 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class AuthService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthService.class);
+    private static final String INVALID_CREDENTIALS_MESSAGE = "Credenciales incorrectas";
 
-    private final UsuarioRepository usuarioRepository;
+    private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    private final BitacoraRepository bitacoraRepository;
+    private final BinnacleRepository binnacleRepository;
 
 
-    public AuthService(UsuarioRepository usuarioRepository,
+    public AuthService(UserRepository userRepository,
                        BCryptPasswordEncoder passwordEncoder,
                        JwtService jwtService,
-                       BitacoraRepository bitacoraRepository) {
-        this.usuarioRepository = usuarioRepository;
+                       BinnacleRepository binnacleRepository) {
+        this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
-        this.bitacoraRepository = bitacoraRepository;
+        this.binnacleRepository = binnacleRepository;
 
     }
 
@@ -39,44 +43,47 @@ public class AuthService {
     // =========================
 
     public LoginResponseDto login(String email, String password) {
-        Usuario usuario = usuarioRepository.findByEmail(email).orElse(null);
+        User user = userRepository.findByEmail(email).orElse(null);
 
-        if (usuario == null) {
-            registrarLoginFallido(null, email);
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "Usuario no encontrado"
-            );
-        }
-
-        if (!passwordEncoder.matches(password, usuario.getPassword())) {
-            registrarLoginFallido(usuario.getId(), email);
+        if (user == null) {
+            registerLoginFailed(null, email);
             throw new ResponseStatusException(
                     HttpStatus.UNAUTHORIZED,
-                    "Credenciales inválidas"
+                    INVALID_CREDENTIALS_MESSAGE
             );
         }
 
-        if (usuario.getEstado() != EstadoUsuario.ACTIVO) {
-            registrarLoginFallido(usuario.getId(), email);
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            registerLoginFailed(user.getId(), email);
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    INVALID_CREDENTIALS_MESSAGE
+            );
+        }
+
+        if (user.getState() != UserStatus.Asset) {
+            registerLoginFailed(user.getId(), email);
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
                     "Usuario no activo"
             );
         }
 
-        registrarLoginExitoso(usuario.getId());
+        successfullogin(user.getId());
 
-        String token = jwtService.generarToken(
-                usuario.getEmail(),
-                usuario.getRol().getNombre()
+        String token = jwtService.generateToken(
+                user.getEmail(),
+                user.getRole().getName(),
+                user.getName(),
+                user.getId()
         );
 
         return new LoginResponseDto(
                 token,
                 "Bearer",
-                usuario.getEmail(),
-                usuario.getRol().getNombre()
+                user.getEmail(),
+                user.getRole().getName(),
+                user.getName()
         );
     }
 
@@ -85,19 +92,24 @@ public class AuthService {
     // =========================
 // Registrar Login Exitoso
 // =========================
-    private void registrarLoginExitoso(Long usuarioId) {
-        bitacoraRepository.save(
-                new Bitacora(usuarioId, "LOGIN_EXITOSO")
+    private void successfullogin(Long usuarioId) {
+        binnacleRepository.save(
+                new Binnacle(usuarioId, "LOGIN_EXITOSO")
         );
     }
 
     // =========================
 // Registrar Login Fallido
 // =========================
-    private void registrarLoginFallido(Long usuarioId, String email) {
-        bitacoraRepository.save(
-                new Bitacora(usuarioId, "LOGIN_FALLIDO - " + email)
-        );
+    private void registerLoginFailed(Long usuarioId, String email) {
+        try {
+            binnacleRepository.save(
+                    new Binnacle(usuarioId, "LOGIN_FALLIDO - " + email)
+            );
+        } catch (Exception ex) {
+            // A failed audit write must not change authentication semantics.
+            LOGGER.warn("No se pudo registrar LOGIN_FALLIDO para {}", email, ex);
+        }
     }
 
 }

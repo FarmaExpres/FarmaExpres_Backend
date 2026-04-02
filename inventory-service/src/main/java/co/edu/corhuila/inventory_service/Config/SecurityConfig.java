@@ -30,22 +30,35 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
 
-
-                        // ADMIN puede gestionar productos (crear, actualizar, eliminar y ver)
+                        // Public endpoints
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/status").permitAll()
-
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+
+                        // Products: ADMIN can create, update and delete
                         .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
 
-                        // ADMIN y EMPLEADO pueden ver productos
-                        .requestMatchers(HttpMethod.GET, "/api/products/**").hasAnyRole("ADMIN","EMPLEADO")
+                        // Products: ADMIN, PHARMACIST and AUDITOR can view
+                        .requestMatchers(HttpMethod.GET, "/api/products/**")
+                        .hasAnyRole("ADMIN", "FARMACEUTICO", "AUDITOR")
+
+                        // Motions/Movements: ADMIN and AUDITOR can view
+                        .requestMatchers(HttpMethod.GET, "/api/movements/**")
+                        .hasAnyRole("ADMIN", "AUDITOR")
+                        .requestMatchers(HttpMethod.GET, "/api/motions/**")
+                        .hasAnyRole("ADMIN", "AUDITOR")
+                        .requestMatchers(HttpMethod.GET, "/api/Motion/**")
+                        .hasAnyRole("ADMIN", "AUDITOR")
+
+                        // Everything else requires authentication
                         .anyRequest().authenticated()
+
                 )
                 .addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 }
+
