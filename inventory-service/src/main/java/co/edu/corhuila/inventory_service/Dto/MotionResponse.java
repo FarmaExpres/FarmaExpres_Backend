@@ -3,9 +3,12 @@ package co.edu.corhuila.inventory_service.Dto;
 
 
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import co.edu.corhuila.inventory_service.Entity.Motion;
 
 import java.time.Instant;
+import java.util.List;
 
 public class MotionResponse {
 
@@ -25,10 +28,13 @@ public class MotionResponse {
     private String markedByUserName;
     private Instant markedAt;
     private String observation;
+    private String adjustmentSummary;
+    private List<AdjustmentDetailItem> adjustmentDetail;
 
     private static final String SYSTEM_USER_NAME = "SYSTEM_INIT";
     private static final String SYSTEM_USER_EMAIL = "system@farmaexpres.local";
     private static final String SYSTEM_USER_ROLE = "SYSTEM";
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public Long getId() {
         return id;
@@ -158,6 +164,22 @@ public class MotionResponse {
         this.observation = observation;
     }
 
+    public String getAdjustmentSummary() {
+        return adjustmentSummary;
+    }
+
+    public void setAdjustmentSummary(String adjustmentSummary) {
+        this.adjustmentSummary = adjustmentSummary;
+    }
+
+    public List<AdjustmentDetailItem> getAdjustmentDetail() {
+        return adjustmentDetail;
+    }
+
+    public void setAdjustmentDetail(List<AdjustmentDetailItem> adjustmentDetail) {
+        this.adjustmentDetail = adjustmentDetail;
+    }
+
     public MotionResponse(Motion m) {
         this.id = m.getId();
         this.type = m.getType().name();
@@ -175,9 +197,26 @@ public class MotionResponse {
         this.markedByUserName = m.getMarkedByUserName();
         this.markedAt = m.getMarkedAt();
         this.observation = m.getObservation();
+        this.adjustmentSummary = m.getAdjustmentSummary();
+        this.adjustmentDetail = parseAdjustmentDetail(m.getAdjustmentDetail());
     }
 
     private String firstNotBlank(String value, String fallback) {
         return value == null || value.isBlank() ? fallback : value;
+    }
+
+    private List<AdjustmentDetailItem> parseAdjustmentDetail(String adjustmentDetailJson) {
+        if (adjustmentDetailJson == null || adjustmentDetailJson.isBlank()) {
+            return null;
+        }
+
+        try {
+            return OBJECT_MAPPER.readValue(
+                    adjustmentDetailJson,
+                    new TypeReference<List<AdjustmentDetailItem>>() {}
+            );
+        } catch (Exception ex) {
+            return null;
+        }
     }
 }

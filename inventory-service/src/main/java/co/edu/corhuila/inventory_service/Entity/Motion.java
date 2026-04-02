@@ -3,6 +3,8 @@ package co.edu.corhuila.inventory_service.Entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 
@@ -55,6 +57,13 @@ public class Motion {
 
     @Column(name = "observation")
     private String observation;
+
+    @Column(name = "adjustment_summary")
+    private String adjustmentSummary;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "adjustment_detail", columnDefinition = "jsonb")
+    private String adjustmentDetail;
 
     @ManyToOne
     @JoinColumn(name = "produc_id")
@@ -207,6 +216,22 @@ public class Motion {
 
     public void setObservation(String observation) {
         this.observation = observation;
+    }
+
+    public String getAdjustmentSummary() {
+        return adjustmentSummary;
+    }
+
+    public void setAdjustmentSummary(String adjustmentSummary) {
+        this.adjustmentSummary = adjustmentSummary;
+    }
+
+    public String getAdjustmentDetail() {
+        return adjustmentDetail;
+    }
+
+    public void setAdjustmentDetail(String adjustmentDetail) {
+        this.adjustmentDetail = adjustmentDetail;
     }
 }
 
