@@ -2,6 +2,7 @@ package co.edu.corhuila.inventory_service.Service;
 
 
 import co.edu.corhuila.inventory_service.Dto.MotionResponse;
+import co.edu.corhuila.inventory_service.Entity.Motion;
 import co.edu.corhuila.inventory_service.Entity.MovementType;
 import co.edu.corhuila.inventory_service.Repository.MotionRepository;
 import co.edu.corhuila.inventory_service.Repository.ProductRepository;
@@ -25,6 +26,16 @@ public class MotionService {
     public List<MotionResponse> listMotion() {
         return motionRepository.findAll()
                 .stream()
+                .map(MotionResponse::new)
+                .toList();
+    }
+
+    public List<MotionResponse> listMotionByUser(Long userId) {
+        List<Motion> motions = userId == null
+                ? motionRepository.findAllByOrderByDateTimeDesc()
+                : motionRepository.findByUserIdOrderByDateTimeDesc(userId);
+
+        return motions.stream()
                 .map(MotionResponse::new)
                 .toList();
     }
