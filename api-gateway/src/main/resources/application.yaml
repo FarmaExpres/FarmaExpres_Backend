@@ -7,21 +7,57 @@ spring:
 
   cloud:
     gateway:
-      routes:
-        - id: auth-service
-          uri: http://auth-service:8081
-          predicates:
-            - Path=/api/auth/**,/api/users/**,/api/binnacle/**
+      server:
+        webflux:
+          globalcors:
+            add-to-simple-url-handler-mapping: true
+            cors-configurations:
+              '[/**]':
+                allowedOriginPatterns:
+                  - "http://localhost:*"
+                  - "http://127.0.0.1:*"
+                allowedMethods:
+                  - GET
+                  - POST
+                  - PUT
+                  - PATCH
+                  - DELETE
+                  - OPTIONS
+                allowedHeaders:
+                  - "*"
+                exposedHeaders:
+                  - Authorization
+                allowCredentials: true
+          routes:
+            - id: auth-login-route
+              uri: http://auth-service:8081
+              predicates:
+                - Path=/api/auth/**
 
-        - id: inventory-service
-          uri: http://inventory-service:8082
-          predicates:
-            - Path=/api/products/**,/api/movements/**
+            - id: users-route
+              uri: http://auth-service:8081
+              predicates:
+                - Path=/api/users,/api/users/**
 
-        - id: alert-service
-          uri: http://alert-service:8083
-          predicates:
-            - Path=/api/alerts/**
+            - id: binnacle-route
+              uri: http://auth-service:8081
+              predicates:
+                - Path=/api/binnacle,/api/binnacle/**
+
+            - id: products-route
+              uri: http://inventory-service:8082
+              predicates:
+                - Path=/api/products,/api/products/**
+
+            - id: movements-route
+              uri: http://inventory-service:8082
+              predicates:
+                - Path=/api/movements,/api/movements/**
+
+            - id: alerts-route
+              uri: http://alert-service:8083
+              predicates:
+                - Path=/api/alerts,/api/alerts/**
 
 management:
   endpoints:
