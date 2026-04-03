@@ -119,6 +119,8 @@ CREATE TABLE motion (
     marked_by_user_name VARCHAR(150),
     marked_at TIMESTAMPTZ,
     observation TEXT,
+    adjustment_summary TEXT,
+    adjustment_detail JSONB,
     produc_id BIGINT,
 
     CONSTRAINT fk_motion_product
