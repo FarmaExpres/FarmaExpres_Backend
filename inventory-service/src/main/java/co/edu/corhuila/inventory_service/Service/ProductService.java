@@ -1,10 +1,11 @@
 package co.edu.corhuila.inventory_service.Service;
 
-import co.edu.corhuila.inventory_service.Dto.AdjustmentDetailItem;
 import co.edu.corhuila.inventory_service.Dto.ActiveInventorySummaryResponse;
+import co.edu.corhuila.inventory_service.Dto.ActiveInventoryTableItemResponse;
+import co.edu.corhuila.inventory_service.Dto.AdjustmentDetailItem;
 import co.edu.corhuila.inventory_service.Dto.ProductOutOfStockResponse;
-import co.edu.corhuila.inventory_service.Entity.MovementType;
 import co.edu.corhuila.inventory_service.Entity.Motion;
+import co.edu.corhuila.inventory_service.Entity.MovementType;
 import co.edu.corhuila.inventory_service.Entity.Product;
 import co.edu.corhuila.inventory_service.Repository.MotionRepository;
 import co.edu.corhuila.inventory_service.Repository.ProductRepository;
@@ -44,14 +45,13 @@ public class ProductService {
         this.motionRepository = motionRepository;
     }
 
-        // Método para crear un nuevo producto
-        public Product createProduct(Product product) {
+    public Product createProduct(Product product) {
         validateProductData(product);
 
         if (productRepository.existsByCode(product.getCode())) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "El código del producto ya existe"
+                    "El codigo del producto ya existe"
             );
         }
 
@@ -62,7 +62,7 @@ public class ProductService {
                 MovementType.Entrance,
                 productSaved.getStock(),
                 productSaved,
-                "Creación de producto",
+                "Creacion de producto",
                 actor.userId(),
                 actor.userName(),
                 actor.userEmail(),
@@ -73,7 +73,6 @@ public class ProductService {
         return productSaved;
     }
 
-    // Método para actualizar un producto existente
     @Transactional
     public Product updateProduct(Long id, Product updatedData) {
         Product product = productRepository.findById(id)
@@ -164,7 +163,6 @@ public class ProductService {
         return productSaved;
     }
 
-    // Método para eliminar un producto 
     @Transactional
     public void removeProduct(Long id) {
         Product product = productRepository.findById(id)
@@ -181,7 +179,7 @@ public class ProductService {
                 MovementType.Deleted,
                 product.getStock(),
                 product,
-                "Eliminación lógica del producto",
+                "Eliminacion logica del producto",
                 actor.userId(),
                 actor.userName(),
                 actor.userEmail(),
@@ -190,16 +188,14 @@ public class ProductService {
         motionRepository.save(motion);
     }
 
-    // Método para listar todos los productos
     public List<Product> listProducts() {
         return productRepository.findAll();
     }
-    // Método para listar solo los productos activos
 
     public List<Product> listActiveProducts() {
         return productRepository.findByActiveTrue();
     }
-    // Método para listar productos que estan vacios
+
     public List<ProductOutOfStockResponse> outOfStockProducts() {
         return productRepository.findByStockAndActiveTrue(0)
                 .stream()
@@ -207,7 +203,28 @@ public class ProductService {
                 .toList();
     }
 
-        // Método para validar los datos del producto
+    public List<ActiveInventoryTableItemResponse> getActiveInventoryTable() {
+        return productRepository.findByActiveTrue()
+                .stream()
+                .map(product -> {
+                    BigDecimal unitPrice = product.getUnitPrice() != null
+                            ? product.getUnitPrice()
+                            : BigDecimal.ZERO;
+                    int stock = product.getStock() != null
+                            ? product.getStock()
+                            : 0;
+
+                    return new ActiveInventoryTableItemResponse(
+                            product.getCode(),
+                            product.getName(),
+                            stock,
+                            unitPrice,
+                            unitPrice.multiply(BigDecimal.valueOf(stock))
+                    );
+                })
+                .toList();
+    }
+
     private void validateProductData(Product product) {
         if (product.getStock() == null || product.getStock() < 0) {
             throw new ResponseStatusException(
@@ -219,7 +236,7 @@ public class ProductService {
         if (product.getMinimumStock() == null || product.getMinimumStock() < 0) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "El stock mínimo debe ser mayor o igual a 0"
+                    "El stock minimo debe ser mayor o igual a 0"
             );
         }
     }
@@ -285,7 +302,7 @@ public class ProductService {
         if (!Objects.equals(previousMinimumStock, updatedData.getMinimumStock())) {
             detail.add(new AdjustmentDetailItem(
                     "stockMinimo",
-                    "Stock mínimo",
+                    "Stock minimo",
                     previousMinimumStock,
                     updatedData.getMinimumStock(),
                     "number"
