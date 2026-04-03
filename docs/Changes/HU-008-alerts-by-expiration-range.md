@@ -5,7 +5,7 @@
 - Nombre: Consulta de alertas de productos proximos a vencer por rangos de dias
 - Microservicio: `alert-service`
 - Estado: Planificado
-- Rama de trabajo: `HU-AC-dev`
+- Rama de trabajo: `HU-008-dev`
 
 ## 2. Objetivo de la HU
 Agregar dos nuevos metodos en `alert-service` para generar alertas de productos activos que esten proximos a vencer en dos ventanas de tiempo independientes:
