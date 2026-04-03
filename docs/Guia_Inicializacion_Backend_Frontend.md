@@ -113,6 +113,7 @@ Consumo oficial desde frontend:
 Si el frontend tiene proxy configurado, debe apuntar al gateway:
 - `/api/auth`, `/api/users`, `/api/binnacle` -> `http://localhost:8080`
 - `/api/products`, `/api/movements` -> `http://localhost:8080`
+- `/api/movements/entrance`, `/api/movements/exit`, `/api/movements/updated` -> `http://localhost:8080`
 - `/api/alerts` -> `http://localhost:8080`
 
 Nota:
@@ -142,6 +143,9 @@ Nota:
   - `GET /api/products/Assets`
   - `GET /api/products/out-of-stock`
   - `GET /api/movements`
+  - `GET /api/movements/entrance`
+  - `GET /api/movements/exit`
+  - `GET /api/movements/updated`
 
 - Alertas:
   - `GET /api/alerts`
