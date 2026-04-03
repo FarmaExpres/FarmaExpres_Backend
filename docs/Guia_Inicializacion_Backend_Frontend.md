@@ -20,8 +20,10 @@ docker compose up -d --build
 
 Servicios esperados:
 - `postgres` -> `localhost:5433`
+- `api-gateway` -> `localhost:8080`
 - `auth-service` -> `localhost:8081`
 - `inventory-service` -> `localhost:8082`
+- `alert-service` -> `localhost:8083`
 
 Verificar estado:
 
@@ -59,7 +61,7 @@ Al arrancar por primera vez se crean automaticamente:
 
 URL:
 
-`POST http://localhost:8081/api/auth/login`
+`POST http://localhost:8080/api/auth/login`
 
 Body JSON:
 
@@ -104,9 +106,14 @@ El frontend ya autentica por pantalla de login, por lo tanto:
 4. El frontend recibe y guarda el JWT automaticamente desde `POST /api/auth/login`.
 5. Con esa sesion, el acceso a modulos y endpoints se habilita segun rol.
 
-Si el frontend tiene proxy configurado:
-- `/api/auth`, `/api/users`, `/api/binnacle` -> `http://localhost:8081`
-- `/api/products` -> `http://localhost:8082`
+Consumo oficial desde frontend:
+- Base URL backend: `http://localhost:8080`
+- El frontend no debe consumir directamente `8081`, `8082` ni `8083`.
+
+Si el frontend tiene proxy configurado, debe apuntar al gateway:
+- `/api/auth`, `/api/users`, `/api/binnacle` -> `http://localhost:8080`
+- `/api/products`, `/api/movements` -> `http://localhost:8080`
+- `/api/alerts` -> `http://localhost:8080`
 
 Nota:
 - Ya no se requiere configurar `VITE_DEV_TOKEN` manualmente para operar el flujo normal.
@@ -134,6 +141,14 @@ Nota:
   - `DELETE /api/products/{id}`
   - `GET /api/products/Assets`
   - `GET /api/products/out-of-stock`
+  - `GET /api/movements`
+
+- Alertas:
+  - `GET /api/alerts`
+  - `GET /api/alerts/low-stock`
+  - `GET /api/alerts/expired`
+  - `GET /api/alerts/out-of-stock`
+  - `GET /api/alerts/expiring-soon`
 
 ---
 
@@ -154,8 +169,10 @@ Uso permitido en frontend:
 ## 9) Solucion de problemas rapida
 
 - Si algun servicio no responde:
+  - `docker compose logs -f api-gateway`
   - `docker compose logs -f auth-service`
   - `docker compose logs -f inventory-service`
+  - `docker compose logs -f alert-service`
   - `docker compose logs -f postgres`
 
 - Si hay conflicto por datos viejos y quieres iniciar limpio:
@@ -164,5 +181,5 @@ Uso permitido en frontend:
 
 - Si el frontend muestra pantalla de login pero no entra:
   - Verificar credenciales de seed en la seccion 3.
-  - Verificar que `POST /api/auth/login` responda `200` con usuario valido.
-  - Verificar proxy del frontend hacia `8081` y `8082`.
+  - Verificar que `POST /api/auth/login` por `http://localhost:8080` responda `200` con usuario valido.
+  - Verificar proxy del frontend hacia `8080`.
