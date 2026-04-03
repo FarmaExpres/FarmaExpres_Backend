@@ -4,7 +4,7 @@
 - HU: `HU-008`
 - Nombre: Consulta de alertas de productos proximos a vencer por rangos de dias
 - Microservicio: `alert-service`
-- Estado: Planificado
+- Estado: En progreso
 - Rama de trabajo: `HU-008-dev`
 
 ## 2. Objetivo de la HU
@@ -16,7 +16,7 @@ Esta HU busca complementar la HU-005, que actualmente cubre solo productos proxi
 
 ## 3. Alcance propuesto
 Se documenta la implementacion de dos nuevas consultas de alertas:
-- un metodo para alertas de vencimiento en rango `16-30 dias`
+- un metodo para alertas de vencimiento en rango `16-30 dias`  Implementado
 - un metodo para alertas de vencimiento en rango `31-60 dias`
 
 Cada metodo debera seguir la arquitectura actual del microservicio:
@@ -25,17 +25,17 @@ Cada metodo debera seguir la arquitectura actual del microservicio:
 ## 4. Endpoints propuestos
 ### Consumo oficial (gateway)
 - Metodo: `GET`
-- URL propuesta: `http://localhost:8080/api/alerts/expiring-16-30-days`
+- URL propuesta: `http://localhost:8080/api/alerts/expiring-half-month`
 
 - Metodo: `GET`
-- URL propuesta: `http://localhost:8080/api/alerts/expiring-31-60-days`
+- URL propuesta: `http://localhost:8080/api/alerts/expiring-month`
 
 ### Endpoint interno del microservicio
 - Metodo: `GET`
-- URL propuesta: `http://localhost:8083/api/alerts/expiring-16-30-days`
+- URL propuesta: `http://localhost:8083/api/alerts/expiring-half-month`
 
 - Metodo: `GET`
-- URL propuesta: `http://localhost:8083/api/alerts/expiring-31-60-days`
+- URL propuesta: `http://localhost:8083/api/alerts/expiring-month`
 
 ## 5. Logica de negocio esperada
 Se consideraran solo productos que cumplan:

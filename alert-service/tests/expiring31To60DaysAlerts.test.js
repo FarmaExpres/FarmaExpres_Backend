@@ -5,27 +5,27 @@ const http = require("node:http");
 const productRepository = require("../src/repositories/productRepository");
 const { app } = require("../src/app");
 
-test("GET /api/alerts/expiring-half-month returns expiring alerts between 16 and 30 days", async () => {
+test("GET /api/alerts/expiring-month returns expiring alerts between 31 and 60 days", async () => {
   const originalFindProductsExpiringBetweenDays =
     productRepository.findProductsExpiringBetweenDays;
 
   productRepository.findProductsExpiringBetweenDays = async () => [
     {
-      id: 41,
-      code: "EXP-1630-001",
-      name: "Cetirizina 10 mg",
-      stock: 16,
-      minimumStock: 6,
-      expirationDate: "2026-04-20",
+      id: 51,
+      code: "EXP-3160-001",
+      name: "Vitamina C 1 g",
+      stock: 25,
+      minimumStock: 8,
+      expirationDate: "2026-05-10",
       active: true,
     },
     {
-      id: 42,
-      code: "EXP-1630-002",
-      name: "Amoxicilina 500 mg",
-      stock: 9,
-      minimumStock: 4,
-      expirationDate: "2026-04-29",
+      id: 52,
+      code: "EXP-3160-002",
+      name: "Omeprazol 20 mg",
+      stock: 14,
+      minimumStock: 6,
+      expirationDate: "2026-05-25",
       active: true,
     },
   ];
@@ -37,7 +37,7 @@ test("GET /api/alerts/expiring-half-month returns expiring alerts between 16 and
   try {
     const response = await new Promise((resolve, reject) => {
       http.get(
-        `http://127.0.0.1:${address.port}/api/alerts/expiring-half-month`,
+        `http://127.0.0.1:${address.port}/api/alerts/expiring-month`,
         (result) => {
           let body = "";
 
@@ -58,10 +58,10 @@ test("GET /api/alerts/expiring-half-month returns expiring alerts between 16 and
     assert.equal(response.statusCode, 200);
     assert.ok(Date.parse(response.body.generatedAt));
     assert.equal(response.body.total, 2);
-    assert.equal(response.body.alerts[0].type, "EXPIRING_16_30_DAYS");
-    assert.equal(response.body.alerts[0].product.code, "EXP-1630-001");
-    assert.equal(response.body.alerts[1].type, "EXPIRING_16_30_DAYS");
-    assert.equal(response.body.alerts[1].product.code, "EXP-1630-002");
+    assert.equal(response.body.alerts[0].type, "EXPIRING_31_60_DAYS");
+    assert.equal(response.body.alerts[0].product.code, "EXP-3160-001");
+    assert.equal(response.body.alerts[1].type, "EXPIRING_31_60_DAYS");
+    assert.equal(response.body.alerts[1].product.code, "EXP-3160-002");
   } finally {
     productRepository.findProductsExpiringBetweenDays =
       originalFindProductsExpiringBetweenDays;
