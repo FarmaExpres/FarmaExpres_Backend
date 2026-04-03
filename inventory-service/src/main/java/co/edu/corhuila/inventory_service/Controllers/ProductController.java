@@ -1,7 +1,6 @@
 package co.edu.corhuila.inventory_service.Controllers;
 
-
-
+import co.edu.corhuila.inventory_service.Dto.ActiveInventorySummaryResponse;
 import co.edu.corhuila.inventory_service.Dto.ProductOutOfStockResponse;
 import co.edu.corhuila.inventory_service.Entity.Product;
 import co.edu.corhuila.inventory_service.Service.ProductService;
@@ -49,6 +48,11 @@ public class ProductController {
     @GetMapping("/Assets")
     public ResponseEntity<List<Product>> listActiveProducts() {
     return ResponseEntity.ok(productService.listActiveProducts());
+    }
+
+    @GetMapping("/active-summary")
+    public ResponseEntity<ActiveInventorySummaryResponse> getActiveInventorySummary() {
+    return ResponseEntity.ok(productService.getActiveInventorySummary());
     }
 
     @GetMapping("/out-of-stock")
