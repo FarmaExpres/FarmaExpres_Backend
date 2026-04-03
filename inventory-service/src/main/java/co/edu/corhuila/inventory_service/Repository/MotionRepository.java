@@ -9,7 +9,5 @@ import java.util.List;
 
 public interface MotionRepository extends JpaRepository<Motion, Long> {
 
-
-
-    List<Motion> findByType(MovementType Type);
+    List<Motion> findByType(MovementType type);
 }
