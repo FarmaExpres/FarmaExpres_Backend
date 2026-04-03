@@ -36,4 +36,11 @@ public class MotionService {
                 .toList();
     }
 
+    public List<MotionResponse> listExitMotion() {
+        return motionRepository.findByType(MovementType.Exit)
+                .stream()
+                .map(MotionResponse::new)
+                .toList();
+    }
+
 }

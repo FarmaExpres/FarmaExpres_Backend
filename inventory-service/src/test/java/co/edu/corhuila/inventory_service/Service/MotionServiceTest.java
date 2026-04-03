@@ -55,4 +55,29 @@ class MotionServiceTest {
         assertNotNull(response.get(0));
         verify(motionRepository).findByType(MovementType.Entrance);
     }
+
+    @Test
+    void shouldListOnlyExitMotion() {
+        Product product = new Product();
+        product.setId(2L);
+        product.setName("Ibuprofeno");
+
+        Motion exitMotion = new Motion();
+        exitMotion.setId(20L);
+        exitMotion.setType(MovementType.Exit);
+        exitMotion.setAmount(8);
+        exitMotion.setProduct(product);
+
+        when(motionRepository.findByType(MovementType.Exit))
+                .thenReturn(List.of(exitMotion));
+
+        List<MotionResponse> response = motionService.listExitMotion();
+
+        assertEquals(1, response.size());
+        assertEquals("Exit", response.get(0).getType());
+        assertEquals(2L, response.get(0).getProductId());
+        assertEquals("Ibuprofeno", response.get(0).getProductName());
+        assertNotNull(response.get(0));
+        verify(motionRepository).findByType(MovementType.Exit);
+    }
 }
