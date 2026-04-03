@@ -6,6 +6,7 @@ import co.edu.corhuila.inventory_service.Dto.MotionResponse;
 import co.edu.corhuila.inventory_service.Service.MotionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -24,6 +25,12 @@ public class MotionController {
     @GetMapping({"/api/movements", "/api/motions", "/api/Motion"})
     public ResponseEntity<List<MotionResponse>> listMotion() {
         return ResponseEntity.ok(motionService.listMotion());
+    }
+
+    @GetMapping("/api/movements/filter-by-user")
+    public ResponseEntity<List<MotionResponse>> listMotionByUser(
+            @RequestParam(required = false) Long userId) {
+        return ResponseEntity.ok(motionService.listMotionByUser(userId));
     }
 
     @GetMapping("/api/movements/entrance")

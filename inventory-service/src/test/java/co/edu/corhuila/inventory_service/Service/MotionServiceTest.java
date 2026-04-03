@@ -12,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Instant;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -106,5 +107,61 @@ class MotionServiceTest {
         assertEquals("Ajuste por conciliacion", response.get(0).getAdjustmentSummary());
         assertNotNull(response.get(0));
         verify(motionRepository).findByType(MovementType.Updated);
+    }
+
+    @Test
+    void shouldListAllMotionWhenUserFilterIsNotProvided() {
+        Product product = new Product();
+        product.setId(4L);
+        product.setName("Diclofenaco");
+
+        Motion motion = new Motion();
+        motion.setId(40L);
+        motion.setType(MovementType.Exit);
+        motion.setAmount(-10);
+        motion.setProduct(product);
+        motion.setUserId(7L);
+        motion.setUserName("Marlon Romero");
+        motion.setUserRole("Farmaceutico");
+        motion.setDateTime(Instant.parse("2026-04-03T13:43:00Z"));
+
+        when(motionRepository.findAllByOrderByDateTimeDesc())
+                .thenReturn(List.of(motion));
+
+        List<MotionResponse> response = motionService.listMotionByUser(null);
+
+        assertEquals(1, response.size());
+        assertEquals(7L, response.get(0).getUserId());
+        assertEquals("Marlon Romero", response.get(0).getUserName());
+        assertEquals("Farmaceutico", response.get(0).getUserRole());
+        verify(motionRepository).findAllByOrderByDateTimeDesc();
+    }
+
+    @Test
+    void shouldListOnlyMotionForRequestedUser() {
+        Product product = new Product();
+        product.setId(5L);
+        product.setName("Amoxicilina");
+
+        Motion motion = new Motion();
+        motion.setId(50L);
+        motion.setType(MovementType.Updated);
+        motion.setAmount(0);
+        motion.setProduct(product);
+        motion.setUserId(9L);
+        motion.setUserName("Jose Gregorio Cangrejo");
+        motion.setUserRole("Farmaceutico");
+        motion.setDateTime(Instant.parse("2026-04-03T00:16:07Z"));
+
+        when(motionRepository.findByUserIdOrderByDateTimeDesc(9L))
+                .thenReturn(List.of(motion));
+
+        List<MotionResponse> response = motionService.listMotionByUser(9L);
+
+        assertEquals(1, response.size());
+        assertEquals(9L, response.get(0).getUserId());
+        assertEquals("Jose Gregorio Cangrejo", response.get(0).getUserName());
+        assertEquals("Farmaceutico", response.get(0).getUserRole());
+        verify(motionRepository).findByUserIdOrderByDateTimeDesc(9L);
     }
 }
