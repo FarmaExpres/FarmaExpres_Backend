@@ -80,4 +80,31 @@ class MotionServiceTest {
         assertNotNull(response.get(0));
         verify(motionRepository).findByType(MovementType.Exit);
     }
+
+    @Test
+    void shouldListOnlyUpdatedMotion() {
+        Product product = new Product();
+        product.setId(3L);
+        product.setName("Amoxicilina");
+
+        Motion updatedMotion = new Motion();
+        updatedMotion.setId(30L);
+        updatedMotion.setType(MovementType.Updated);
+        updatedMotion.setAmount(5);
+        updatedMotion.setProduct(product);
+        updatedMotion.setAdjustmentSummary("Ajuste por conciliacion");
+
+        when(motionRepository.findByType(MovementType.Updated))
+                .thenReturn(List.of(updatedMotion));
+
+        List<MotionResponse> response = motionService.listUpdatedMotion();
+
+        assertEquals(1, response.size());
+        assertEquals("Updated", response.get(0).getType());
+        assertEquals(3L, response.get(0).getProductId());
+        assertEquals("Amoxicilina", response.get(0).getProductName());
+        assertEquals("Ajuste por conciliacion", response.get(0).getAdjustmentSummary());
+        assertNotNull(response.get(0));
+        verify(motionRepository).findByType(MovementType.Updated);
+    }
 }

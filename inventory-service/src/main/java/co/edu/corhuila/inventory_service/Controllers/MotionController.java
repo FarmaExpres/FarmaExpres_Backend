@@ -36,4 +36,9 @@ public class MotionController {
     public ResponseEntity<List<MotionResponse>> listExitMotion() {
         return ResponseEntity.ok(motionService.listExitMotion());
     }
+
+    @GetMapping("/api/movements/updated")
+    public ResponseEntity<List<MotionResponse>> listUpdatedMotion() {
+        return ResponseEntity.ok(motionService.listUpdatedMotion());
+    }
 }

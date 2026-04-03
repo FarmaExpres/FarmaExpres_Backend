@@ -43,4 +43,11 @@ public class MotionService {
                 .toList();
     }
 
+    public List<MotionResponse> listUpdatedMotion() {
+        return motionRepository.findByType(MovementType.Updated)
+                .stream()
+                .map(MotionResponse::new)
+                .toList();
+    }
+
 }
