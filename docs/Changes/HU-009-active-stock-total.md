@@ -36,6 +36,10 @@ Se agregara un nuevo metodo que:
 
 Este metodo no reemplaza los endpoints actuales de listado; los complementa con una consulta de resumen.
 
+El calculo del valor total debe hacerse producto por producto:
+- `stock * unitPrice`
+- luego sumar el resultado de todos los productos activos
+
 ## 5. Endpoint propuesto
 ### Consumo oficial por gateway
 - Metodo: `GET`
@@ -56,15 +60,12 @@ El metodo debe:
 - responder correctamente incluso si no existen productos activos
 
 Comportamiento esperado cuando no haya productos activos:
-- `totalActiveProducts = 0`
 - `totalStock = 0`
 - `totalInventoryValue = 0`
 
 ## 7. Contrato de respuesta esperado
 ```json
 {
-  "generatedAt": "2026-04-03T16:00:00.000Z",
-  "totalActiveProducts": 3,
   "totalStock": 240,
   "totalInventoryValue": 786000.00
 }
@@ -88,11 +89,12 @@ Comportamiento esperado cuando no haya productos activos:
 3. La respuesta debe incluir el total de stock de productos activos.
 4. La respuesta debe incluir el valor total monetario del inventario activo.
 5. Si no existen productos activos, el endpoint debe responder valores en `0` y no fallar.
-6. El endpoint debe poder consumirse a traves de `api-gateway`.
+6. El valor total debe calcularse multiplicando `stock * unitPrice` para cada producto activo y sumando todos los resultados.
+7. El endpoint debe poder consumirse a traves de `api-gateway`.
 
 ## 10. Riesgos o validaciones previas
 - Debe definirse si `totalInventoryValue` se retornara como `number` JSON simple o con formato monetario; se recomienda devolverlo como valor numerico sin formato.
-- Debe confirmarse si el frontend necesita tambien el conteo de productos activos; en esta propuesta se incluye como campo adicional util.
+- El formato visual tipo `$ 5.199.000` debe resolverse en frontend; backend debe responder el valor numerico limpio.
 - Si el equipo prefiere evitar calculos en memoria, puede resolverse con agregaciones desde `ProductRepository`.
 
 ## 11. Archivos candidatos a modificacion
