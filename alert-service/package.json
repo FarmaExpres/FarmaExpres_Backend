@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "test": "node tests/status.test.js && node tests/lowStockAlerts.test.js && node tests/expiredAlerts.test.js && node tests/outOfStockAlerts.test.js && node tests/expiringSoonAlerts.test.js && node tests/allAlerts.test.js"
+    "test": "node tests/status.test.js && node tests/lowStockAlerts.test.js && node tests/expiredAlerts.test.js && node tests/outOfStockAlerts.test.js && node tests/expiringSoonAlerts.test.js && node tests/expiring16To30DaysAlerts.test.js && node tests/expiring31To60DaysAlerts.test.js && node tests/allAlerts.test.js"
   },
   "keywords": [
     "farmaexpres",

@@ -52,6 +52,12 @@ El servicio sigue una arquitectura en capas:
 - `GET /api/alerts/expiring-soon`
   - Retorna productos activos cuya fecha de expiracion esta dentro de la ventana configurada por `EXPIRING_SOON_DAYS`
 
+- `GET /api/alerts/expiring-half-month`
+  - Retorna productos activos cuya fecha de expiracion esta entre `16` y `30` dias
+
+- `GET /api/alerts/expiring-month`
+  - Retorna productos activos cuya fecha de expiracion esta entre `31` y `60` dias
+
 - `GET /api/alerts`
   - Retorna el consolidado general de alertas
   - Response:

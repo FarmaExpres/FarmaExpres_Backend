@@ -153,6 +153,8 @@ Nota:
   - `GET /api/alerts/expired`
   - `GET /api/alerts/out-of-stock`
   - `GET /api/alerts/expiring-soon`
+  - `GET /api/alerts/expiring-half-month`
+  - `GET /api/alerts/expiring-month`
 
 ---
 
