@@ -64,6 +64,9 @@ Con esta HU se busca centralizar el acceso en el `api-gateway` para:
 - `DELETE /api/products/{id}`
 - `GET /api/products/out-of-stock`
 - `GET /api/movements`
+- `GET /api/movements/entrance`
+- `GET /api/movements/exit`
+- `GET /api/movements/updated`
 - `GET /api/alerts/low-stock`
 - `GET /api/alerts/expired`
 - `GET /api/alerts/out-of-stock`
@@ -121,6 +124,10 @@ La HU se considerara terminada cuando:
 - Se mejoro el endpoint `GET /status` del gateway para responder con `status`, `service` y `timestamp`.
 - Se actualizo la guia de inicializacion para indicar que el frontend debe consumir unicamente `http://localhost:8080`.
 - Se agrego prueba automatizada para validar el contrato del endpoint `/status`.
+- Se confirmo que la ruta del gateway `/api/movements/**` cubre tambien los nuevos endpoints:
+  - `/api/movements/entrance`
+  - `/api/movements/exit`
+  - `/api/movements/updated`
 
 ## 15. Archivos modificados
 - `api-gateway/src/main/java/co/edu/corhuila/api_gateway/Config/SecurityConfig.java`
