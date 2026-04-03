@@ -26,4 +26,19 @@ public class MotionController {
     public ResponseEntity<List<MotionResponse>> listMotion() {
         return ResponseEntity.ok(motionService.listMotion());
     }
+
+    @GetMapping("/api/movements/entrance")
+    public ResponseEntity<List<MotionResponse>> listEntranceMotion() {
+        return ResponseEntity.ok(motionService.listEntranceMotion());
+    }
+
+    @GetMapping("/api/movements/exit")
+    public ResponseEntity<List<MotionResponse>> listExitMotion() {
+        return ResponseEntity.ok(motionService.listExitMotion());
+    }
+
+    @GetMapping("/api/movements/updated")
+    public ResponseEntity<List<MotionResponse>> listUpdatedMotion() {
+        return ResponseEntity.ok(motionService.listUpdatedMotion());
+    }
 }

@@ -2,6 +2,7 @@ package co.edu.corhuila.inventory_service.Service;
 
 
 import co.edu.corhuila.inventory_service.Dto.MotionResponse;
+import co.edu.corhuila.inventory_service.Entity.MovementType;
 import co.edu.corhuila.inventory_service.Repository.MotionRepository;
 import co.edu.corhuila.inventory_service.Repository.ProductRepository;
 import org.springframework.stereotype.Service;
@@ -28,5 +29,25 @@ public class MotionService {
                 .toList();
     }
 
+    public List<MotionResponse> listEntranceMotion() {
+        return motionRepository.findByType(MovementType.Entrance)
+                .stream()
+                .map(MotionResponse::new)
+                .toList();
+    }
+
+    public List<MotionResponse> listExitMotion() {
+        return motionRepository.findByType(MovementType.Exit)
+                .stream()
+                .map(MotionResponse::new)
+                .toList();
+    }
+
+    public List<MotionResponse> listUpdatedMotion() {
+        return motionRepository.findByType(MovementType.Updated)
+                .stream()
+                .map(MotionResponse::new)
+                .toList();
+    }
 
 }

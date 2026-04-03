@@ -19,7 +19,7 @@ public class Motion {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
-    private MovementType Type;
+    private MovementType type;
 
     @Column(nullable = false)
     private Integer amount;
@@ -72,13 +72,13 @@ public class Motion {
 
     public Motion() {}
 
-    public Motion(MovementType Type,
+    public Motion(MovementType type,
                   Integer amount,
                   Product product) {
-        this(Type, amount, product, null, null, null, null, null);
+        this(type, amount, product, null, null, null, null, null);
     }
 
-    public Motion(MovementType Type,
+    public Motion(MovementType type,
                   Integer amount,
                   Product product,
                   String reason,
@@ -86,7 +86,7 @@ public class Motion {
                   String userName,
                   String userEmail,
                   String userRole) {
-        this.Type = Type;
+        this.type = type;
         this.amount = amount;
         this.product = product;
         this.dateTime = Instant.now();
@@ -107,11 +107,11 @@ public class Motion {
     }
 
     public MovementType getType() {
-        return Type;
+        return type;
     }
 
     public void setType(MovementType type) {
-        Type = type;
+        this.type = type;
     }
 
     public Integer getAmount() {
