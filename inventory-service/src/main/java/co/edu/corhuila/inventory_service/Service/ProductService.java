@@ -1,6 +1,7 @@
 package co.edu.corhuila.inventory_service.Service;
 
 import co.edu.corhuila.inventory_service.Dto.AdjustmentDetailItem;
+import co.edu.corhuila.inventory_service.Dto.ActiveInventorySummaryResponse;
 import co.edu.corhuila.inventory_service.Dto.ProductOutOfStockResponse;
 import co.edu.corhuila.inventory_service.Entity.MovementType;
 import co.edu.corhuila.inventory_service.Entity.Motion;
@@ -348,6 +349,30 @@ public class ProductService {
             return false;
         }
         return left.compareTo(right) == 0;
+    }
+
+    public ActiveInventorySummaryResponse getActiveInventorySummary() {
+        List<Product> activeProducts = productRepository.findByActiveTrue();
+
+        int totalStock = activeProducts.stream()
+                .map(Product::getStock)
+                .filter(Objects::nonNull)
+                .mapToInt(Integer::intValue)
+                .sum();
+
+        BigDecimal totalInventoryValue = activeProducts.stream()
+                .map(product -> {
+                    BigDecimal unitPrice = product.getUnitPrice() != null
+                            ? product.getUnitPrice()
+                            : BigDecimal.ZERO;
+                    int stock = product.getStock() != null
+                            ? product.getStock()
+                            : 0;
+                    return unitPrice.multiply(BigDecimal.valueOf(stock));
+                })
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return new ActiveInventorySummaryResponse(totalStock, totalInventoryValue);
     }
 
     private record MotionActorContext(Long userId, String userName, String userEmail, String userRole) {}
