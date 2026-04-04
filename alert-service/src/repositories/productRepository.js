@@ -1,6 +1,10 @@
 const { getPool } = require("../config/database");
 const { env } = require("../config/env");
 
+function getCurrentDateExpression() {
+  return `(CURRENT_TIMESTAMP AT TIME ZONE '${env.appTimeZone}')::date`;
+}
+
 async function findLowStockProducts() {
   const pool = getPool();
   const query = `
@@ -24,6 +28,7 @@ async function findLowStockProducts() {
 
 async function findExpiredProducts() {
   const pool = getPool();
+  const currentDateExpression = getCurrentDateExpression();
   const query = `
     SELECT
       id,
@@ -35,7 +40,7 @@ async function findExpiredProducts() {
       asset AS active
     FROM ${env.inventory.productsTable}
     WHERE asset = TRUE
-      AND expirationdate < CURRENT_DATE
+      AND expirationdate < ${currentDateExpression}
     ORDER BY expirationdate ASC, name ASC
   `;
 
@@ -66,6 +71,7 @@ async function findOutOfStockProducts() {
 
 async function findExpiringSoonProducts(daysWindow) {
   const pool = getPool();
+  const currentDateExpression = getCurrentDateExpression();
   const query = `
     SELECT
       id,
@@ -77,8 +83,8 @@ async function findExpiringSoonProducts(daysWindow) {
       asset AS active
     FROM ${env.inventory.productsTable}
     WHERE asset = TRUE
-      AND expirationdate > CURRENT_DATE
-      AND expirationdate <= CURRENT_DATE + ($1 * INTERVAL '1 day')
+      AND expirationdate > ${currentDateExpression}
+      AND expirationdate <= ${currentDateExpression} + ($1 * INTERVAL '1 day')
     ORDER BY expirationdate ASC, name ASC
   `;
 
@@ -88,6 +94,7 @@ async function findExpiringSoonProducts(daysWindow) {
 
 async function findProductsExpiringBetweenDays(minDays, maxDays) {
   const pool = getPool();
+  const currentDateExpression = getCurrentDateExpression();
   const query = `
     SELECT
       id,
@@ -99,8 +106,8 @@ async function findProductsExpiringBetweenDays(minDays, maxDays) {
       asset AS active
     FROM ${env.inventory.productsTable}
     WHERE asset = TRUE
-      AND expirationdate >= CURRENT_DATE + ($1 * INTERVAL '1 day')
-      AND expirationdate <= CURRENT_DATE + ($2 * INTERVAL '1 day')
+      AND expirationdate >= ${currentDateExpression} + ($1 * INTERVAL '1 day')
+      AND expirationdate <= ${currentDateExpression} + ($2 * INTERVAL '1 day')
     ORDER BY expirationdate ASC, name ASC
   `;
 
@@ -108,7 +115,30 @@ async function findProductsExpiringBetweenDays(minDays, maxDays) {
   return result.rows;
 }
 
+async function findExpiringReportProducts(maxDaysWindow) {
+  const pool = getPool();
+  const currentDateExpression = getCurrentDateExpression();
+  const query = `
+    SELECT
+      id,
+      code,
+      name,
+      stock,
+      minimumstock AS "minimumStock",
+      expirationdate AS "expirationDate",
+      asset AS active
+    FROM ${env.inventory.productsTable}
+    WHERE asset = TRUE
+      AND expirationdate <= ${currentDateExpression} + ($1 * INTERVAL '1 day')
+    ORDER BY expirationdate ASC, name ASC
+  `;
+
+  const result = await pool.query(query, [maxDaysWindow]);
+  return result.rows;
+}
+
 module.exports = {
+  findExpiringReportProducts,
   findExpiringSoonProducts,
   findProductsExpiringBetweenDays,
   findExpiredProducts,

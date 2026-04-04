@@ -4,6 +4,7 @@ const http = require("node:http");
 
 const productRepository = require("../src/repositories/productRepository");
 const { app } = require("../src/app");
+const { getDaysUntilDate } = require("../src/utils/dateUtils");
 
 test("GET /api/alerts/expiring-half-month returns expiring alerts between 16 and 30 days", async () => {
   const originalFindProductsExpiringBetweenDays =
@@ -60,6 +61,12 @@ test("GET /api/alerts/expiring-half-month returns expiring alerts between 16 and
     assert.equal(response.body.total, 2);
     assert.equal(response.body.alerts[0].type, "EXPIRING_16_30_DAYS");
     assert.equal(response.body.alerts[0].product.code, "EXP-1630-001");
+    assert.equal(response.body.alerts[0].product.expirationDate, "2026-04-20");
+    assert.equal(
+      response.body.alerts[0].product.diasRestantes,
+      getDaysUntilDate("2026-04-20"),
+    );
+    assert.equal(response.body.alerts[0].product.estado, "Medio");
     assert.equal(response.body.alerts[1].type, "EXPIRING_16_30_DAYS");
     assert.equal(response.body.alerts[1].product.code, "EXP-1630-002");
   } finally {

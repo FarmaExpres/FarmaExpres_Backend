@@ -1,3 +1,5 @@
+const { formatDateOnly } = require("../utils/dateUtils");
+
 class Product {
   constructor({
     id,
@@ -13,7 +15,7 @@ class Product {
     this.name = name;
     this.stock = Number(stock);
     this.minimumStock = Number(minimumStock);
-    this.expirationDate = expirationDate;
+    this.expirationDate = formatDateOnly(expirationDate);
     this.active = Boolean(active);
   }
 }
