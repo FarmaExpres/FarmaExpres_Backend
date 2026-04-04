@@ -230,7 +230,7 @@ class MotionServiceTest {
                         pharmacistEntrance
                 ));
 
-        List<UserActivityReportResponse> response = motionService.listUsersActivityReport();
+        List<UserActivityReportResponse> response = motionService.listUsersActivityReport(null);
 
         assertEquals(3, response.size());
         assertEquals(8L, response.get(0).getUserId());
@@ -254,6 +254,55 @@ class MotionServiceTest {
         assertEquals(1L, response.get(2).getTotalMovements());
         assertEquals(1L, response.get(2).getTotalEntrances());
         assertEquals(0L, response.get(2).getTotalExits());
+
+        verify(motionRepository).findAllByOrderByDateTimeDesc();
+    }
+
+    @Test
+    void shouldFilterUsersActivityReportByRole() {
+        Product product = new Product();
+        product.setId(7L);
+        product.setName("Omeprazol");
+
+        Motion adminExitOne = new Motion();
+        adminExitOne.setId(70L);
+        adminExitOne.setType(MovementType.Exit);
+        adminExitOne.setAmount(2);
+        adminExitOne.setProduct(product);
+        adminExitOne.setUserId(8L);
+        adminExitOne.setUserName("Jose Leonardo Vargas");
+        adminExitOne.setUserRole("Administrador");
+
+        Motion adminExitTwo = new Motion();
+        adminExitTwo.setId(71L);
+        adminExitTwo.setType(MovementType.Exit);
+        adminExitTwo.setAmount(4);
+        adminExitTwo.setProduct(product);
+        adminExitTwo.setUserId(8L);
+        adminExitTwo.setUserName("Jose Leonardo Vargas");
+        adminExitTwo.setUserRole("Administrador");
+
+        Motion pharmacistEntrance = new Motion();
+        pharmacistEntrance.setId(72L);
+        pharmacistEntrance.setType(MovementType.Entrance);
+        pharmacistEntrance.setAmount(3);
+        pharmacistEntrance.setProduct(product);
+        pharmacistEntrance.setUserId(9L);
+        pharmacistEntrance.setUserName("Maria Perez");
+        pharmacistEntrance.setUserRole("Farmaceutico");
+
+        when(motionRepository.findAllByOrderByDateTimeDesc())
+                .thenReturn(List.of(adminExitOne, adminExitTwo, pharmacistEntrance));
+
+        List<UserActivityReportResponse> response = motionService.listUsersActivityReport("Administrador");
+
+        assertEquals(1, response.size());
+        assertEquals(8L, response.get(0).getUserId());
+        assertEquals("Jose Leonardo Vargas", response.get(0).getUserName());
+        assertEquals("Administrador", response.get(0).getUserRole());
+        assertEquals(2L, response.get(0).getTotalMovements());
+        assertEquals(0L, response.get(0).getTotalEntrances());
+        assertEquals(2L, response.get(0).getTotalExits());
 
         verify(motionRepository).findAllByOrderByDateTimeDesc();
     }

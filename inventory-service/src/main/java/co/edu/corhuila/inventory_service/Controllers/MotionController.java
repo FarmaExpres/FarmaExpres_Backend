@@ -50,7 +50,8 @@ public class MotionController {
     }
 
     @GetMapping("/api/movements/report/users-activity")
-    public ResponseEntity<List<UserActivityReportResponse>> listUsersActivityReport() {
-        return ResponseEntity.ok(motionService.listUsersActivityReport());
+    public ResponseEntity<List<UserActivityReportResponse>> listUsersActivityReport(
+            @RequestParam(required = false) String role) {
+        return ResponseEntity.ok(motionService.listUsersActivityReport(role));
     }
 }

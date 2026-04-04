@@ -4,7 +4,7 @@
 - HU: `HU-014`
 - Nombre: Reporte de actividad de usuarios con filtro por rol
 - Microservicio: `inventory-service`
-- Estado: Planeada
+- Estado: Implementada en backend
 - Rama de trabajo sugerida: `HU-014-dev`
 
 ## 2. Objetivo de la HU
@@ -86,7 +86,7 @@ Comportamiento esperado:
 - el resultado debe devolverse agrupado por usuario
 - los usuarios deben ordenarse de mayor a menor actividad
 
-## 7. Propuesta de endpoint
+## 7. Endpoint implementado
 ### Consumo oficial por gateway
 - Metodo: `GET`
 - URL propuesta: `http://localhost:8080/api/movements/report/users-activity`
@@ -101,14 +101,14 @@ Comportamiento esperado:
 Ejemplos propuestos:
 ```http
 GET /api/movements/report/users-activity
-GET /api/movements/report/users-activity?role=Administrador
+GET /api/movements/report/users-activity?role=Admin
 ```
 
 Nota:
-Se propone usar query params porque el requerimiento corresponde a un filtro sobre un listado consolidado.
+Se usa query params porque el requerimiento corresponde a un filtro sobre un listado consolidado.
 
-## 8. DTO propuesto
-Nombre sugerido:
+## 8. DTO implementado
+Nombre usado:
 - `UserActivityReportResponse`
 
 Campos sugeridos:
@@ -159,8 +159,8 @@ La respuesta esperada del endpoint es una lista de usuarios resumidos:
 ]
 ```
 
-## 10. Logica de negocio esperada
-El metodo debe:
+## 10. Logica de negocio implementada
+El metodo actualmente:
 - consultar los movimientos registrados en base de datos
 - agruparlos por `userId`, `userName` y `userRole`
 - contar el total de movimientos por usuario
@@ -169,10 +169,11 @@ El metodo debe:
 - calcular un nivel de actividad
 - permitir filtrar por rol de forma opcional
 
-Comportamiento sugerido:
+Comportamiento actual:
 - si no existen movimientos, retornar lista vacia
 - si el rol enviado no tiene resultados, retornar lista vacia
 - incluir registros del sistema si existen movimientos sin usuario autenticado y ya fueron guardados como `Sistema` o `Automatico`
+- ordenar el resultado de mayor a menor por `totalMovements`
 
 ## 11. Regla sugerida para `activityLevel`
 Como primera aproximacion, puede definirse una clasificacion simple basada en `totalMovements`.
@@ -185,24 +186,20 @@ Ejemplo sugerido:
 Nota:
 Esta regla puede ajustarse luego si el frontend o negocio necesita otros umbrales.
 
-## 12. Propuesta tecnica de implementacion
-- `MotionRepository`
-  - agregar una consulta agregada por usuario y rol
-  - soportar filtro opcional por `userRole`
+## 12. Implementacion tecnica realizada
 - `MotionService`
-  - crear un metodo que construya el reporte consolidado
-  - centralizar la regla de calculo de `activityLevel`
+  - se implemento `listUsersActivityReport(String role)`
+  - se centralizo la regla de calculo de `activityLevel`
 - `MotionController`
-  - exponer un endpoint GET para consultar el reporte
+  - se expuso el endpoint `GET /api/movements/report/users-activity`
+  - se habilito `role` como query param opcional
 - `Dto`
-  - crear `UserActivityReportResponse`
+  - se creo `UserActivityReportResponse`
+- `Pruebas`
+  - se agregaron pruebas unitarias para todos y filtro por rol
 
-Opciones tecnicas viables:
-- usar consulta JPQL con agregaciones y `CASE WHEN`
-- o consultar movimientos y agrupar en memoria desde Java
-
-Recomendacion:
-Para esta HU conviene preferir agregacion desde repositorio para reducir volumen de datos transferidos y dejar el reporte mas eficiente.
+Nota tecnica:
+La implementacion actual realiza la agregacion en memoria a partir de `findAllByOrderByDateTimeDesc()`. Mas adelante, si el volumen de movimientos crece, se puede optimizar con una consulta agregada en `MotionRepository`.
 
 ## 13. Criterios de aceptacion propuestos
 1. Debe existir un endpoint en `inventory-service` para consultar el reporte de actividad de usuarios.
@@ -229,4 +226,4 @@ Para esta HU conviene preferir agregacion desde repositorio para reducir volumen
 - Confirmar si deben mostrarse usuarios sin movimientos; con el enfoque actual solo saldran usuarios con actividad registrada.
 
 ## 16. Estado de este documento
-Este documento deja definida la propuesta funcional y tecnica inicial de `HU-014` para posteriormente implementar el reporte de actividad de usuarios por rol en `inventory-service`.
+Este documento refleja la implementacion actual de `HU-014` en backend para consultar el reporte de actividad de usuarios, incluyendo consulta general y filtro opcional por rol en `inventory-service`.

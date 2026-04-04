@@ -68,14 +68,20 @@ public class MotionService {
                 .toList();
     }
 
-    public List<UserActivityReportResponse> listUsersActivityReport() {
+    public List<UserActivityReportResponse> listUsersActivityReport(String role) {
         Map<UserActivityKey, UserActivityAccumulator> activityByUser = new LinkedHashMap<>();
+        String normalizedRoleFilter = normalizeRole(role);
 
         for (Motion motion : motionRepository.findAllByOrderByDateTimeDesc()) {
+            String userRole = firstNotBlank(motion.getUserRole(), SYSTEM_USER_ROLE);
+            if (normalizedRoleFilter != null && !userRole.equalsIgnoreCase(normalizedRoleFilter)) {
+                continue;
+            }
+
             UserActivityKey key = new UserActivityKey(
                     motion.getUserId(),
                     firstNotBlank(motion.getUserName(), SYSTEM_USER_NAME),
-                    firstNotBlank(motion.getUserRole(), SYSTEM_USER_ROLE)
+                    userRole
             );
 
             UserActivityAccumulator accumulator = activityByUser.computeIfAbsent(
@@ -101,6 +107,10 @@ public class MotionService {
                         .comparing(UserActivityReportResponse::getTotalMovements, Comparator.reverseOrder())
                         .thenComparing(UserActivityReportResponse::getUserName, String.CASE_INSENSITIVE_ORDER))
                 .toList();
+    }
+
+    private String normalizeRole(String role) {
+        return role == null || role.isBlank() ? null : role.trim();
     }
 
     private UserActivityReportResponse toResponse(UserActivityKey key, UserActivityAccumulator accumulator) {
