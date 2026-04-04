@@ -205,15 +205,20 @@ public class ProductService {
                 .toList();
     }
 
+    public List<LowStockReportItemResponse> getAllLowStockProducts() {
+        return productRepository.findByActiveTrue()
+                .stream()
+                .filter(this::isLowStockProduct)
+                .sorted(this::compareLowStockProducts)
+                .map(product -> buildLowStockResponse(product, resolveLowStockStatus(product)))
+                .toList();
+    }
+
     public List<LowStockReportItemResponse> getCriticalLowStockProducts() {
         return productRepository.findByActiveTrue()
                 .stream()
                 .filter(this::isCriticalLowStockProduct)
-                .sorted(Comparator
-                        .comparingInt(this::calculateCoverage)
-                        .thenComparing(
-                                Product::getName,
-                                Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
+                .sorted(this::compareLowStockProducts)
                 .map(product -> buildLowStockResponse(product, "Critico"))
                 .toList();
     }
@@ -222,11 +227,7 @@ public class ProductService {
         return productRepository.findByActiveTrue()
                 .stream()
                 .filter(this::isAlertLowStockProduct)
-                .sorted(Comparator
-                        .comparingInt(this::calculateCoverage)
-                        .thenComparing(
-                                Product::getName,
-                                Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
+                .sorted(this::compareLowStockProducts)
                 .map(product -> buildLowStockResponse(product, "Alerta"))
                 .toList();
     }
@@ -284,6 +285,10 @@ public class ProductService {
         return stock <= minimumStock && (stock * 2) <= minimumStock;
     }
 
+    private boolean isLowStockProduct(Product product) {
+        return isCriticalLowStockProduct(product) || isAlertLowStockProduct(product);
+    }
+
     private boolean isAlertLowStockProduct(Product product) {
         if (product == null || !Boolean.TRUE.equals(product.getActive())) {
             return false;
@@ -297,6 +302,31 @@ public class ProductService {
         }
 
         return stock <= minimumStock && (stock * 2) > minimumStock;
+    }
+
+    private String resolveLowStockStatus(Product product) {
+        if (isCriticalLowStockProduct(product)) {
+            return "Critico";
+        }
+        if (isAlertLowStockProduct(product)) {
+            return "Alerta";
+        }
+        return "";
+    }
+
+    private int compareLowStockProducts(Product left, Product right) {
+        Comparator<Product> comparator = Comparator
+                .comparingInt(this::statusPriority)
+                .thenComparingInt(this::calculateCoverage)
+                .thenComparing(
+                        Product::getName,
+                        Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
+
+        return comparator.compare(left, right);
+    }
+
+    private int statusPriority(Product product) {
+        return isCriticalLowStockProduct(product) ? 0 : 1;
     }
 
     private LowStockReportItemResponse buildLowStockResponse(Product product, String status) {

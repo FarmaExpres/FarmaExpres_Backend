@@ -263,4 +263,73 @@ class ProductServiceTest {
         assertEquals("Reponer 21 unidades", response.get(1).getSuggestion());
         verify(productRepository).findByActiveTrue();
     }
+
+    @Test
+    void shouldReturnAllLowStockProductsOrderedByPriorityAndCoverage() {
+        Product criticalProduct = new Product(
+                "Amoxicillin 500mg",
+                "AMX-001",
+                5,
+                new BigDecimal("3000"),
+                LocalDate.of(2027, 12, 31),
+                10
+        );
+        criticalProduct.setId(1L);
+
+        Product moreCriticalProduct = new Product(
+                "Loratadina 10mg",
+                "LOR-001",
+                2,
+                new BigDecimal("1800"),
+                LocalDate.of(2027, 10, 10),
+                10
+        );
+        moreCriticalProduct.setId(2L);
+
+        Product alertProduct = new Product(
+                "Acetaminophen 500mg",
+                "ACM-001",
+                19,
+                new BigDecimal("2500"),
+                LocalDate.of(2027, 12, 31),
+                20
+        );
+        alertProduct.setId(3L);
+
+        Product alertProductTwo = new Product(
+                "Cetirizina 10mg",
+                "CET-001",
+                6,
+                new BigDecimal("2200"),
+                LocalDate.of(2027, 9, 12),
+                10
+        );
+        alertProductTwo.setId(4L);
+
+        Product healthyProduct = new Product(
+                "Ibuprofeno 400mg",
+                "IBU-001",
+                40,
+                new BigDecimal("2800"),
+                LocalDate.of(2027, 11, 15),
+                8
+        );
+        healthyProduct.setId(5L);
+
+        when(productRepository.findByActiveTrue())
+                .thenReturn(List.of(alertProduct, healthyProduct, criticalProduct, alertProductTwo, moreCriticalProduct));
+
+        List<LowStockReportItemResponse> response = productService.getAllLowStockProducts();
+
+        assertEquals(4, response.size());
+        assertEquals("LOR-001", response.get(0).getCode());
+        assertEquals("Critico", response.get(0).getStatus());
+        assertEquals("AMX-001", response.get(1).getCode());
+        assertEquals("Critico", response.get(1).getStatus());
+        assertEquals("CET-001", response.get(2).getCode());
+        assertEquals("Alerta", response.get(2).getStatus());
+        assertEquals("ACM-001", response.get(3).getCode());
+        assertEquals("Alerta", response.get(3).getStatus());
+        verify(productRepository).findByActiveTrue();
+    }
 }

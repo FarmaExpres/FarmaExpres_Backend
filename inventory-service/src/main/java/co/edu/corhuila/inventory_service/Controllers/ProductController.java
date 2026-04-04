@@ -69,6 +69,11 @@ public class ProductController {
         return ResponseEntity.ok(productService.outOfStockProducts());
     }
 
+    @GetMapping({"/low-stock", "/low-stock-report"})
+    public ResponseEntity<List<LowStockReportItemResponse>> getAllLowStockProducts() {
+        return ResponseEntity.ok(productService.getAllLowStockProducts());
+    }
+
     @GetMapping({"/low-stock/critical", "/low-stock-report/critical"})
     public ResponseEntity<List<LowStockReportItemResponse>> getCriticalLowStockProducts() {
         return ResponseEntity.ok(productService.getCriticalLowStockProducts());

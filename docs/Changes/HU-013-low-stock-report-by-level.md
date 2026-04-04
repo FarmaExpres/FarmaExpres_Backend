@@ -4,7 +4,7 @@
 - HU: `HU-013`
 - Nombre: Reporte de productos con bajo stock por nivel
 - Microservicio: `inventory-service`
-- Estado: Propuesto
+- Estado: Implementado parcialmente
 - Rama de trabajo sugerida: `HU-013-dev`
 
 ## 2. Objetivo de la HU
@@ -42,6 +42,7 @@ El backend debe permitir:
 
 ### Compatibilidad temporal implementada
 Para no romper pruebas previas, los endpoints implementados aceptan tambien:
+- `http://localhost:8082/api/products/low-stock`
 - `http://localhost:8082/api/products/low-stock/critical`
 - `http://localhost:8082/api/products/low-stock/alert`
 
@@ -55,6 +56,11 @@ Sin embargo, para alinearse con la necesidad actual del frontend, esta HU propon
 - un metodo para `Todos`
 - un metodo para `Critico`
 - un metodo para `Alerta`
+
+Implementado hasta ahora:
+- `GET /api/products/low-stock-report`
+- `GET /api/products/low-stock-report/critical`
+- `GET /api/products/low-stock-report/alert`
 
 ## 6. Alcance funcional esperado
 - Obtener productos activos del inventario con stock comprometido.
