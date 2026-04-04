@@ -4,6 +4,7 @@ const http = require("node:http");
 
 const productRepository = require("../src/repositories/productRepository");
 const { app } = require("../src/app");
+const { getDaysUntilDate } = require("../src/utils/dateUtils");
 
 test("GET /api/alerts/expired returns expired alert collection", async () => {
   const originalFindExpiredProducts = productRepository.findExpiredProducts;
@@ -71,6 +72,8 @@ test("GET /api/alerts/expired returns expired alert collection", async () => {
       minimumStock: 8,
       expirationDate: "2026-01-15",
       active: true,
+      diasRestantes: getDaysUntilDate("2026-01-15"),
+      estado: "Vencido",
     });
   } finally {
     productRepository.findExpiredProducts = originalFindExpiredProducts;
