@@ -3,6 +3,7 @@ package co.edu.corhuila.inventory_service.Controllers;
 
 
 import co.edu.corhuila.inventory_service.Dto.MotionResponse;
+import co.edu.corhuila.inventory_service.Dto.UserActivityReportResponse;
 import co.edu.corhuila.inventory_service.Service.MotionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,5 +47,11 @@ public class MotionController {
     @GetMapping("/api/movements/updated")
     public ResponseEntity<List<MotionResponse>> listUpdatedMotion() {
         return ResponseEntity.ok(motionService.listUpdatedMotion());
+    }
+
+    @GetMapping("/api/movements/report/users-activity")
+    public ResponseEntity<List<UserActivityReportResponse>> listUsersActivityReport(
+            @RequestParam(required = false) String role) {
+        return ResponseEntity.ok(motionService.listUsersActivityReport(role));
     }
 }
