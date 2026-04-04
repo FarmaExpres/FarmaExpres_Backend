@@ -30,15 +30,19 @@ El backend debe permitir:
 ## 4. Endpoints funcionales propuestos
 ### Consumo oficial (gateway)
 - Metodo: `GET`
-- URL: `http://localhost:8080/api/inventory/low-stock-report`
-- URL: `http://localhost:8080/api/inventory/low-stock-report/critical`
-- URL: `http://localhost:8080/api/inventory/low-stock-report/alert`
+- URL: `http://localhost:8080/api/products/low-stock-report`
+- URL: `http://localhost:8080/api/products/low-stock-report/critical`
+- URL: `http://localhost:8080/api/products/low-stock-report/alert`
 
 ### Endpoint interno del microservicio
 - Metodo: `GET`
-- URL: `http://localhost:8082/api/inventory/low-stock-report`
-- URL: `http://localhost:8082/api/inventory/low-stock-report/critical`
-- URL: `http://localhost:8082/api/inventory/low-stock-report/alert`
+- URL: `http://localhost:8082/api/products/low-stock-report`
+- URL: `http://localhost:8082/api/products/low-stock-report/critical`
+- URL: `http://localhost:8082/api/products/low-stock-report/alert`
+
+### Compatibilidad temporal implementada
+Para no romper pruebas previas, el endpoint critico actual tambien acepta:
+- `http://localhost:8082/api/products/low-stock/critical`
 
 ## 5. Parametros de consulta propuestos
 Opcionalmente se puede unificar la consulta principal con un parametro:

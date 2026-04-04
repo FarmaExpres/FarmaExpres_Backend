@@ -2,6 +2,7 @@ package co.edu.corhuila.inventory_service.Service;
 
 import co.edu.corhuila.inventory_service.Dto.ActiveInventorySummaryResponse;
 import co.edu.corhuila.inventory_service.Dto.ActiveInventoryTableItemResponse;
+import co.edu.corhuila.inventory_service.Dto.CriticalLowStockResponse;
 import co.edu.corhuila.inventory_service.Entity.Product;
 import co.edu.corhuila.inventory_service.Repository.MotionRepository;
 import co.edu.corhuila.inventory_service.Repository.ProductRepository;
@@ -124,6 +125,92 @@ class ProductServiceTest {
         List<ActiveInventoryTableItemResponse> response = productService.getActiveInventoryTable();
 
         assertEquals(List.of(), response);
+        verify(productRepository).findByActiveTrue();
+    }
+
+    @Test
+    void shouldReturnOnlyCriticalLowStockProducts() {
+        Product criticalProduct = new Product(
+                "Amoxicillin 500mg",
+                "AMX-001",
+                5,
+                new BigDecimal("3000"),
+                LocalDate.of(2027, 12, 31),
+                10
+        );
+        criticalProduct.setId(1L);
+
+        Product alertProduct = new Product(
+                "Acetaminophen 500mg",
+                "ACM-001",
+                19,
+                new BigDecimal("2500"),
+                LocalDate.of(2027, 12, 31),
+                20
+        );
+        alertProduct.setId(2L);
+
+        Product inactiveCriticalProduct = new Product(
+                "Ibuprofeno 400mg",
+                "IBU-001",
+                2,
+                new BigDecimal("2800"),
+                LocalDate.of(2027, 11, 15),
+                8
+        );
+        inactiveCriticalProduct.setId(3L);
+        inactiveCriticalProduct.setActive(false);
+
+        when(productRepository.findByActiveTrue())
+                .thenReturn(List.of(criticalProduct, alertProduct));
+
+        List<CriticalLowStockResponse> response = productService.getCriticalLowStockProducts();
+
+        assertEquals(1, response.size());
+        assertEquals(1L, response.get(0).getId());
+        assertEquals("AMX-001", response.get(0).getCode());
+        assertEquals("Amoxicillin 500mg", response.get(0).getName());
+        assertEquals(5, response.get(0).getStock());
+        assertEquals(10, response.get(0).getMinimumStock());
+        assertEquals(50, response.get(0).getCoverage());
+        assertEquals("50%", response.get(0).getCoverageLabel());
+        assertEquals("Critico", response.get(0).getStatus());
+        assertEquals("Reponer 15 unidades", response.get(0).getSuggestion());
+        verify(productRepository).findByActiveTrue();
+    }
+
+    @Test
+    void shouldReturnCriticalProductsOrderedByCoverageAndName() {
+        Product secondByCoverage = new Product(
+                "Vitamina C 1g",
+                "VIT-001",
+                5,
+                new BigDecimal("1500"),
+                LocalDate.of(2027, 10, 10),
+                10
+        );
+        secondByCoverage.setId(2L);
+
+        Product firstByCoverage = new Product(
+                "Loratadina 10mg",
+                "LOR-001",
+                2,
+                new BigDecimal("1800"),
+                LocalDate.of(2027, 9, 15),
+                10
+        );
+        firstByCoverage.setId(1L);
+
+        when(productRepository.findByActiveTrue())
+                .thenReturn(List.of(secondByCoverage, firstByCoverage));
+
+        List<CriticalLowStockResponse> response = productService.getCriticalLowStockProducts();
+
+        assertEquals(2, response.size());
+        assertEquals("LOR-001", response.get(0).getCode());
+        assertEquals(20, response.get(0).getCoverage());
+        assertEquals("VIT-001", response.get(1).getCode());
+        assertEquals(50, response.get(1).getCoverage());
         verify(productRepository).findByActiveTrue();
     }
 }

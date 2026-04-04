@@ -3,6 +3,7 @@ package co.edu.corhuila.inventory_service.Service;
 import co.edu.corhuila.inventory_service.Dto.ActiveInventorySummaryResponse;
 import co.edu.corhuila.inventory_service.Dto.ActiveInventoryTableItemResponse;
 import co.edu.corhuila.inventory_service.Dto.AdjustmentDetailItem;
+import co.edu.corhuila.inventory_service.Dto.CriticalLowStockResponse;
 import co.edu.corhuila.inventory_service.Dto.ProductOutOfStockResponse;
 import co.edu.corhuila.inventory_service.Entity.Motion;
 import co.edu.corhuila.inventory_service.Entity.MovementType;
@@ -25,6 +26,7 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -203,6 +205,19 @@ public class ProductService {
                 .toList();
     }
 
+    public List<CriticalLowStockResponse> getCriticalLowStockProducts() {
+        return productRepository.findByActiveTrue()
+                .stream()
+                .filter(this::isCriticalLowStockProduct)
+                .sorted(Comparator
+                        .comparingInt(this::calculateCoverage)
+                        .thenComparing(
+                                Product::getName,
+                                Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
+                .map(this::buildCriticalLowStockResponse)
+                .toList();
+    }
+
     public List<ActiveInventoryTableItemResponse> getActiveInventoryTable() {
         return productRepository.findByActiveTrue()
                 .stream()
@@ -239,6 +254,56 @@ public class ProductService {
                     "El stock minimo debe ser mayor o igual a 0"
             );
         }
+    }
+
+    private boolean isCriticalLowStockProduct(Product product) {
+        if (product == null || !Boolean.TRUE.equals(product.getActive())) {
+            return false;
+        }
+
+        Integer stock = product.getStock();
+        Integer minimumStock = product.getMinimumStock();
+
+        if (stock == null || minimumStock == null || minimumStock <= 0) {
+            return false;
+        }
+
+        return stock <= minimumStock && (stock * 2) <= minimumStock;
+    }
+
+    private CriticalLowStockResponse buildCriticalLowStockResponse(Product product) {
+        int stock = product.getStock();
+        int minimumStock = product.getMinimumStock();
+        int coverage = calculateCoverage(product);
+        int suggestedUnits = calculateSuggestedUnits(stock, minimumStock);
+
+        return new CriticalLowStockResponse(
+                product.getId(),
+                product.getCode() != null ? product.getCode() : "",
+                product.getName() != null ? product.getName() : "",
+                stock,
+                minimumStock,
+                coverage,
+                coverage + "%",
+                "Critico",
+                "Reponer " + suggestedUnits + " unidades"
+        );
+    }
+
+    private int calculateCoverage(Product product) {
+        int stock = product.getStock() != null ? product.getStock() : 0;
+        int minimumStock = product.getMinimumStock() != null ? product.getMinimumStock() : 0;
+
+        if (minimumStock <= 0) {
+            return 0;
+        }
+
+        return (int) Math.round((stock * 100.0) / minimumStock);
+    }
+
+    private int calculateSuggestedUnits(int stock, int minimumStock) {
+        int missingUnits = minimumStock - stock;
+        return minimumStock + Math.max(missingUnits, 0);
     }
 
     private MotionActorContext extractMotionActor() {
