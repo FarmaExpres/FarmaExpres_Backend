@@ -41,8 +41,9 @@ El backend debe permitir:
 - URL: `http://localhost:8082/api/products/low-stock-report/alert`
 
 ### Compatibilidad temporal implementada
-Para no romper pruebas previas, el endpoint critico actual tambien acepta:
+Para no romper pruebas previas, los endpoints implementados aceptan tambien:
 - `http://localhost:8082/api/products/low-stock/critical`
+- `http://localhost:8082/api/products/low-stock/alert`
 
 ## 5. Parametros de consulta propuestos
 Opcionalmente se puede unificar la consulta principal con un parametro:

@@ -2,7 +2,7 @@ package co.edu.corhuila.inventory_service.Controllers;
 
 import co.edu.corhuila.inventory_service.Dto.ActiveInventorySummaryResponse;
 import co.edu.corhuila.inventory_service.Dto.ActiveInventoryTableItemResponse;
-import co.edu.corhuila.inventory_service.Dto.CriticalLowStockResponse;
+import co.edu.corhuila.inventory_service.Dto.LowStockReportItemResponse;
 import co.edu.corhuila.inventory_service.Dto.ProductOutOfStockResponse;
 import co.edu.corhuila.inventory_service.Entity.Product;
 import co.edu.corhuila.inventory_service.Service.ProductService;
@@ -70,7 +70,12 @@ public class ProductController {
     }
 
     @GetMapping({"/low-stock/critical", "/low-stock-report/critical"})
-    public ResponseEntity<List<CriticalLowStockResponse>> getCriticalLowStockProducts() {
+    public ResponseEntity<List<LowStockReportItemResponse>> getCriticalLowStockProducts() {
         return ResponseEntity.ok(productService.getCriticalLowStockProducts());
+    }
+
+    @GetMapping({"/low-stock/alert", "/low-stock-report/alert"})
+    public ResponseEntity<List<LowStockReportItemResponse>> getAlertLowStockProducts() {
+        return ResponseEntity.ok(productService.getAlertLowStockProducts());
     }
 }

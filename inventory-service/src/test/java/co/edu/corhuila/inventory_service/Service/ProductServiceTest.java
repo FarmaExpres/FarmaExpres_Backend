@@ -2,7 +2,7 @@ package co.edu.corhuila.inventory_service.Service;
 
 import co.edu.corhuila.inventory_service.Dto.ActiveInventorySummaryResponse;
 import co.edu.corhuila.inventory_service.Dto.ActiveInventoryTableItemResponse;
-import co.edu.corhuila.inventory_service.Dto.CriticalLowStockResponse;
+import co.edu.corhuila.inventory_service.Dto.LowStockReportItemResponse;
 import co.edu.corhuila.inventory_service.Entity.Product;
 import co.edu.corhuila.inventory_service.Repository.MotionRepository;
 import co.edu.corhuila.inventory_service.Repository.ProductRepository;
@@ -164,7 +164,7 @@ class ProductServiceTest {
         when(productRepository.findByActiveTrue())
                 .thenReturn(List.of(criticalProduct, alertProduct));
 
-        List<CriticalLowStockResponse> response = productService.getCriticalLowStockProducts();
+        List<LowStockReportItemResponse> response = productService.getCriticalLowStockProducts();
 
         assertEquals(1, response.size());
         assertEquals(1L, response.get(0).getId());
@@ -204,13 +204,63 @@ class ProductServiceTest {
         when(productRepository.findByActiveTrue())
                 .thenReturn(List.of(secondByCoverage, firstByCoverage));
 
-        List<CriticalLowStockResponse> response = productService.getCriticalLowStockProducts();
+        List<LowStockReportItemResponse> response = productService.getCriticalLowStockProducts();
 
         assertEquals(2, response.size());
         assertEquals("LOR-001", response.get(0).getCode());
         assertEquals(20, response.get(0).getCoverage());
         assertEquals("VIT-001", response.get(1).getCode());
         assertEquals(50, response.get(1).getCoverage());
+        verify(productRepository).findByActiveTrue();
+    }
+
+    @Test
+    void shouldReturnOnlyAlertLowStockProducts() {
+        Product criticalProduct = new Product(
+                "Amoxicillin 500mg",
+                "AMX-001",
+                5,
+                new BigDecimal("3000"),
+                LocalDate.of(2027, 12, 31),
+                10
+        );
+        criticalProduct.setId(1L);
+
+        Product alertProduct = new Product(
+                "Acetaminophen 500mg",
+                "ACM-001",
+                19,
+                new BigDecimal("2500"),
+                LocalDate.of(2027, 12, 31),
+                20
+        );
+        alertProduct.setId(2L);
+
+        Product alertProductTwo = new Product(
+                "Loratadina 10mg",
+                "LOR-001",
+                6,
+                new BigDecimal("1800"),
+                LocalDate.of(2027, 10, 10),
+                10
+        );
+        alertProductTwo.setId(3L);
+
+        when(productRepository.findByActiveTrue())
+                .thenReturn(List.of(criticalProduct, alertProduct, alertProductTwo));
+
+        List<LowStockReportItemResponse> response = productService.getAlertLowStockProducts();
+
+        assertEquals(2, response.size());
+        assertEquals("LOR-001", response.get(0).getCode());
+        assertEquals(60, response.get(0).getCoverage());
+        assertEquals("Alerta", response.get(0).getStatus());
+        assertEquals("Reponer 14 unidades", response.get(0).getSuggestion());
+        assertEquals("ACM-001", response.get(1).getCode());
+        assertEquals(95, response.get(1).getCoverage());
+        assertEquals("95%", response.get(1).getCoverageLabel());
+        assertEquals("Alerta", response.get(1).getStatus());
+        assertEquals("Reponer 21 unidades", response.get(1).getSuggestion());
         verify(productRepository).findByActiveTrue();
     }
 }

@@ -3,7 +3,7 @@ package co.edu.corhuila.inventory_service.Service;
 import co.edu.corhuila.inventory_service.Dto.ActiveInventorySummaryResponse;
 import co.edu.corhuila.inventory_service.Dto.ActiveInventoryTableItemResponse;
 import co.edu.corhuila.inventory_service.Dto.AdjustmentDetailItem;
-import co.edu.corhuila.inventory_service.Dto.CriticalLowStockResponse;
+import co.edu.corhuila.inventory_service.Dto.LowStockReportItemResponse;
 import co.edu.corhuila.inventory_service.Dto.ProductOutOfStockResponse;
 import co.edu.corhuila.inventory_service.Entity.Motion;
 import co.edu.corhuila.inventory_service.Entity.MovementType;
@@ -205,7 +205,7 @@ public class ProductService {
                 .toList();
     }
 
-    public List<CriticalLowStockResponse> getCriticalLowStockProducts() {
+    public List<LowStockReportItemResponse> getCriticalLowStockProducts() {
         return productRepository.findByActiveTrue()
                 .stream()
                 .filter(this::isCriticalLowStockProduct)
@@ -214,7 +214,20 @@ public class ProductService {
                         .thenComparing(
                                 Product::getName,
                                 Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
-                .map(this::buildCriticalLowStockResponse)
+                .map(product -> buildLowStockResponse(product, "Critico"))
+                .toList();
+    }
+
+    public List<LowStockReportItemResponse> getAlertLowStockProducts() {
+        return productRepository.findByActiveTrue()
+                .stream()
+                .filter(this::isAlertLowStockProduct)
+                .sorted(Comparator
+                        .comparingInt(this::calculateCoverage)
+                        .thenComparing(
+                                Product::getName,
+                                Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
+                .map(product -> buildLowStockResponse(product, "Alerta"))
                 .toList();
     }
 
@@ -271,13 +284,28 @@ public class ProductService {
         return stock <= minimumStock && (stock * 2) <= minimumStock;
     }
 
-    private CriticalLowStockResponse buildCriticalLowStockResponse(Product product) {
+    private boolean isAlertLowStockProduct(Product product) {
+        if (product == null || !Boolean.TRUE.equals(product.getActive())) {
+            return false;
+        }
+
+        Integer stock = product.getStock();
+        Integer minimumStock = product.getMinimumStock();
+
+        if (stock == null || minimumStock == null || minimumStock <= 0) {
+            return false;
+        }
+
+        return stock <= minimumStock && (stock * 2) > minimumStock;
+    }
+
+    private LowStockReportItemResponse buildLowStockResponse(Product product, String status) {
         int stock = product.getStock();
         int minimumStock = product.getMinimumStock();
         int coverage = calculateCoverage(product);
         int suggestedUnits = calculateSuggestedUnits(stock, minimumStock);
 
-        return new CriticalLowStockResponse(
+        return new LowStockReportItemResponse(
                 product.getId(),
                 product.getCode() != null ? product.getCode() : "",
                 product.getName() != null ? product.getName() : "",
@@ -285,7 +313,7 @@ public class ProductService {
                 minimumStock,
                 coverage,
                 coverage + "%",
-                "Critico",
+                status,
                 "Reponer " + suggestedUnits + " unidades"
         );
     }
