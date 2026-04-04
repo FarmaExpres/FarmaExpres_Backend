@@ -6,6 +6,7 @@ const env = {
   port: Number(process.env.PORT || 8083),
   serviceName: process.env.SERVICE_NAME || "FarmaExpres_Micro_Alert",
   nodeEnv: process.env.NODE_ENV || "development",
+  appTimeZone: process.env.APP_TIME_ZONE || "America/Bogota",
   inventory: {
     productsTable: process.env.INVENTORY_PRODUCTS_TABLE || "product",
     expiringSoonDays: Number(process.env.EXPIRING_SOON_DAYS || 15),
