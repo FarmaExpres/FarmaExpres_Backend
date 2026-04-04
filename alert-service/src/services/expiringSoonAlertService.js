@@ -4,7 +4,10 @@ const Product = require("../models/Product");
 const { ALERT_TYPES } = require("../config/constants");
 const { env } = require("../config/env");
 const { getCurrentTimestamp, getDaysUntilDate } = require("../utils/dateUtils");
-const { resolveExpiringSoonSeverity } = require("../utils/alertUtils");
+const {
+  resolveExpirationReportStatus,
+  resolveExpiringSoonSeverity,
+} = require("../utils/alertUtils");
 const productRepository = require("../repositories/productRepository");
 
 async function getExpiringSoonAlerts() {
@@ -14,12 +17,14 @@ async function getExpiringSoonAlerts() {
 
   const alerts = products.map((productRow) => {
     const product = new Product(productRow);
-    const daysLeft = getDaysUntilDate(product.expirationDate);
+    const diasRestantes = getDaysUntilDate(product.expirationDate);
+    product.diasRestantes = diasRestantes;
+    product.estado = resolveExpirationReportStatus(diasRestantes);
 
     return new Alert({
       type: ALERT_TYPES.EXPIRING_SOON,
       severity: resolveExpiringSoonSeverity(product.expirationDate),
-      message: `Producto proximo a vencer (${daysLeft} dias): ${product.name}`,
+      message: `Producto proximo a vencer (${diasRestantes} dias): ${product.name}`,
       product,
     });
   });

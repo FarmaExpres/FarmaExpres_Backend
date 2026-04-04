@@ -4,7 +4,7 @@
 - HU: `HU-012`
 - Nombre: Reporte de productos proximos a vencer
 - Microservicio: `alert-service`
-- Estado: Propuesto
+- Estado: Implementado
 - Rama de trabajo sugerida: `HU-012-dev`
 
 ## 2. Objetivo de la HU
@@ -22,14 +22,14 @@ La vista requiere un listado unico de productos con vencimiento cercano, permiti
   - `16-30 dias`
   - `31-60 dias`
 
-## 4. Endpoint propuesto
+## 4. Endpoint funcional
 ### Consumo oficial (gateway)
 - Metodo: `GET`
-- URL propuesta: `http://localhost:8080/api/alerts/expiring-report`
+- URL: `http://localhost:8080/api/alerts/expiring-report`
 
 ### Endpoint interno del microservicio
 - Metodo: `GET`
-- URL propuesta: `http://localhost:8083/api/alerts/expiring-report`
+- URL: `http://localhost:8083/api/alerts/expiring-report`
 
 ## 5. Parametros de consulta propuestos
 - `range` opcional para filtrar desde backend.
@@ -155,11 +155,11 @@ Orden esperado:
 }
 ```
 
-## 9. Propuesta tecnica de implementacion
-Se propone mantener la arquitectura actual:
+## 9. Implementacion tecnica
+Se mantuvo la arquitectura actual:
 - `router -> controller -> service -> repository`
 
-Componentes estimados:
+Componentes implementados:
 - nuevo endpoint en `alertRoutes.js`
 - nuevo controller para reporte consolidado
 - nuevo service para armar el payload final
@@ -168,17 +168,17 @@ Componentes estimados:
   - `diasRestantes`
   - `estado`
 
-## 10. Archivos estimados a modificar
+## 10. Archivos modificados
 - `alert-service/src/routers/alertRoutes.js`
-- `alert-service/src/controllers/`
-- `alert-service/src/services/`
+- `alert-service/src/controllers/expiringProductsReportController.js`
+- `alert-service/src/services/expiringProductsReportService.js`
 - `alert-service/src/repositories/productRepository.js`
-- `alert-service/src/utils/dateUtils.js`
 - `alert-service/src/utils/alertUtils.js`
-- `alert-service/tests/`
+- `alert-service/tests/expiringProductsReport.test.js`
+- `alert-service/package.json`
 - `docs/Changes/HU-012-expiring-products-report.md`
 
-## 11. Criterios de aceptacion propuestos
+## 11. Criterios de aceptacion cubiertos
 1. Existe un endpoint para consultar el reporte consolidado de productos proximos a vencer.
 2. El endpoint responde `200 OK` cuando el proceso es correcto.
 3. La respuesta incluye `generatedAt`, `total`, `summary` y `reports`.
@@ -190,7 +190,49 @@ Componentes estimados:
 9. El endpoint puede consumirse desde `api-gateway`.
 10. Se agregan pruebas automatizadas para validar calculo, clasificacion y filtros.
 
-## 12. Notas de implementacion
+## 12. Evidencia de validacion
+Se agrego prueba automatizada:
+- `expiringProductsReport.test.js`
+
+Adicionalmente, el script de test del microservicio fue actualizado para ejecutar tambien esta HU.
+
+## 13. Alcance implementado en esta HU
+Esta HU implementa un endpoint nuevo y consolidado:
+- `GET /api/alerts/expiring-report`
+
+En este endpoint si se encuentran implementados:
+- `diasRestantes`
+- `estado`
+- filtros por rango:
+  - `all`
+  - `expired`
+  - `0-15`
+  - `16-30`
+  - `31-60`
+
+Adicionalmente, como ajuste complementario posterior dentro de la misma linea funcional, tambien se actualizaron los endpoints:
+- `GET /api/alerts/expired`
+- `GET /api/alerts/expiring-soon`
+- `GET /api/alerts/expiring-half-month`
+- `GET /api/alerts/expiring-month`
+
+para incluir en `product`:
+- `expirationDate` normalizado a formato `YYYY-MM-DD`
+- `diasRestantes`
+- `estado`
+
+## 14. Aclaracion sobre endpoints existentes
+Los endpoints individuales conservaron su estructura principal de alertas, pero ahora enriquecen el objeto `product` con campos adicionales para mantener consistencia con el reporte consolidado.
+
+## 15. Ajuste complementario sugerido
+Regla de conteo implementada para `diasRestantes`:
+- no cuenta el dia actual
+- si cuenta el dia de vencimiento
+
+Ejemplo validado:
+- si hoy es `2026-04-03` y el producto vence el `2026-04-10`, el resultado es `7`
+
+## 16. Notas de implementacion
 - Esta HU complementa las HUs `HU-005` y `HU-008`, reutilizando sus rangos de vencimiento.
 - Se recomienda no devolver mensajes tipo alerta en este endpoint, sino una estructura orientada a tabla o reporte.
 - Si frontend necesita etiquetas visuales, `estado` puede mapearse directamente a chips o badges.

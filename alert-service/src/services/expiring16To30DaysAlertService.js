@@ -3,7 +3,10 @@ const AlertCollection = require("../models/AlertCollection");
 const Product = require("../models/Product");
 const { ALERT_TYPES } = require("../config/constants");
 const { getCurrentTimestamp, getDaysUntilDate } = require("../utils/dateUtils");
-const { resolveExpiringSoonSeverity } = require("../utils/alertUtils");
+const {
+  resolveExpirationReportStatus,
+  resolveExpiringSoonSeverity,
+} = require("../utils/alertUtils");
 const productRepository = require("../repositories/productRepository");
 
 async function getExpiring16To30DaysAlerts() {
@@ -11,12 +14,14 @@ async function getExpiring16To30DaysAlerts() {
 
   const alerts = products.map((productRow) => {
     const product = new Product(productRow);
-    const daysLeft = getDaysUntilDate(product.expirationDate);
+    const diasRestantes = getDaysUntilDate(product.expirationDate);
+    product.diasRestantes = diasRestantes;
+    product.estado = resolveExpirationReportStatus(diasRestantes);
 
     return new Alert({
       type: ALERT_TYPES.EXPIRING_16_30_DAYS,
       severity: resolveExpiringSoonSeverity(product.expirationDate),
-      message: `Producto proximo a vencer entre 16 y 30 dias (${daysLeft} dias): ${product.name}`,
+      message: `Producto proximo a vencer entre 16 y 30 dias (${diasRestantes} dias): ${product.name}`,
       product,
     });
   });
