@@ -62,7 +62,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/movements/entrance")
                         .hasAnyRole("ADMIN", "AUDITOR", "FARMACEUTICO")
                         .requestMatchers(HttpMethod.GET, "/api/movements/exit")
-                        .hasAnyRole("ADMIN", "AUDITOR")
+                        .hasAnyRole("ADMIN", "AUDITOR", "FARMACEUTICO")
                         .requestMatchers(HttpMethod.GET, "/api/movements/updated")
                         .hasAnyRole("ADMIN", "AUDITOR")
                         .requestMatchers(HttpMethod.GET, "/api/movements/report/users-activity")
@@ -77,6 +77,8 @@ public class SecurityConfig {
                         .hasAnyRole("ADMIN", "AUDITOR")
 
                         .requestMatchers(HttpMethod.POST, "/api/movements/entries")
+                        .hasRole("FARMACEUTICO")
+                        .requestMatchers(HttpMethod.POST, "/api/movements/exits")
                         .hasRole("FARMACEUTICO")
 
                         // Other movement reads (if any future path): ADMIN, AUDITOR and FARMACEUTICO

@@ -4,6 +4,7 @@ import co.edu.corhuila.inventory_service.Dto.FefoConsumeRequest;
 import co.edu.corhuila.inventory_service.Dto.FefoConsumptionItemResponse;
 import co.edu.corhuila.inventory_service.Dto.InventoryEntryRequest;
 import co.edu.corhuila.inventory_service.Dto.InventoryEntryResponse;
+import co.edu.corhuila.inventory_service.Dto.InventoryExitRequest;
 import co.edu.corhuila.inventory_service.Dto.MotionResponse;
 import co.edu.corhuila.inventory_service.Dto.MovementBatchReportItemResponse;
 import co.edu.corhuila.inventory_service.Dto.MovementExecutionResponse;
@@ -46,6 +47,12 @@ public class MotionService {
             "Devolucion",
             "Donacion",
             "Ajuste inventario"
+    ));
+    private static final Set<String> ALLOWED_EXIT_REASONS = new LinkedHashSet<>(Arrays.asList(
+            "Dispensacion",
+            "Ajuste inventario",
+            "Merma",
+            "Vencimiento"
     ));
 
     private final MotionRepository motionRepository;
@@ -185,6 +192,94 @@ public class MotionService {
                         createdBatch.getExpirationDate(),
                         request.getQuantity()
                 ))
+        );
+    }
+
+    @Transactional
+    public MovementExecutionResponse registerInventoryExit(InventoryExitRequest request) {
+        validateInventoryExitRequest(request);
+        Product product = batchService.findProductOrThrow(request.getProductId());
+        if (!product.isActive()) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    "No se pueden registrar salidas para productos retirados"
+            );
+        }
+
+        batchService.refreshBatchStatuses(product.getId());
+        List<Batch> consumableBatches = batchRepository.findConsumableBatchesByProductIdOrderByCreatedAtAsc(
+                product.getId(),
+                List.of(BatchStatus.ACTIVE)
+        );
+
+        int totalAvailable = consumableBatches.stream()
+                .map(Batch::getAvailableStock)
+                .mapToInt(Integer::intValue)
+                .sum();
+
+        if (totalAvailable < request.getQuantity()) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    "La cantidad solicitada supera el stock total disponible por lote"
+            );
+        }
+
+        int remaining = request.getQuantity();
+        List<FefoConsumptionItemResponse> allocations = new ArrayList<>();
+        MotionActorContext actor = extractMotionActor();
+        String normalizedReason = request.getReason().trim();
+        String normalizedDetail = normalizeOptionalText(request.getDetail());
+
+        for (Batch batch : consumableBatches) {
+            if (remaining == 0) {
+                break;
+            }
+
+            int canTake = Math.min(batch.getAvailableStock(), remaining);
+            if (canTake == 0) {
+                continue;
+            }
+
+            batch.setAvailableStock(batch.getAvailableStock() - canTake);
+            batch.setStatus(batchService.resolveBatchStatus(
+                    batch.getAvailableStock(),
+                    batch.getExpirationDate(),
+                    batch.getStatus()
+            ));
+            batchRepository.save(batch);
+
+            Motion motion = new Motion(
+                    MovementType.Exit,
+                    canTake,
+                    product,
+                    normalizedReason,
+                    actor.userId(),
+                    actor.userName(),
+                    actor.userEmail(),
+                    actor.userRole()
+            );
+            motion.setObservation(normalizedDetail);
+            motion.setBatch(batch);
+            motionRepository.save(motion);
+
+            allocations.add(new FefoConsumptionItemResponse(
+                    batch.getId(),
+                    batch.getBatchCode(),
+                    batch.getExpirationDate(),
+                    canTake
+            ));
+            remaining -= canTake;
+        }
+
+        batchService.syncProductStock(product);
+
+        return new MovementExecutionResponse(
+                MovementType.Exit.name(),
+                product.getId(),
+                request.getQuantity(),
+                normalizedReason,
+                normalizedDetail,
+                allocations
         );
     }
 
@@ -442,6 +537,27 @@ public class MotionService {
             throw new ResponseStatusException(
                     HttpStatus.UNPROCESSABLE_ENTITY,
                     "expirationDate no puede corresponder a una fecha vencida"
+            );
+        }
+    }
+
+    private void validateInventoryExitRequest(InventoryExitRequest request) {
+        if (request == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Payload requerido");
+        }
+        if (request.getProductId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "productId es obligatorio");
+        }
+        if (request.getQuantity() == null || request.getQuantity() <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "quantity debe ser mayor a 0");
+        }
+        if (request.getReason() == null || request.getReason().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "reason es obligatorio");
+        }
+        if (!ALLOWED_EXIT_REASONS.contains(request.getReason().trim())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "reason invalido. Valores permitidos: " + String.join(", ", ALLOWED_EXIT_REASONS)
             );
         }
     }
