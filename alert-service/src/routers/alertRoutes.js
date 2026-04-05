@@ -7,6 +7,8 @@ const expiringSoonAlertController = require("../controllers/expiringSoonAlertCon
 const expiredAlertController = require("../controllers/expiredAlertController");
 const lowStockAlertController = require("../controllers/lowStockAlertController");
 const outOfStockAlertController = require("../controllers/outOfStockAlertController");
+const batchAlertsController = require("../controllers/batchAlertsController");
+const { requireReportsRole } = require("../middlewares/reportsAccessMiddleware");
 
 const router = Router();
 
@@ -27,5 +29,12 @@ router.get("/api/alerts/expiring-soon", expiringSoonAlertController.getExpiringS
 router.get("/api/alerts/expired", expiredAlertController.getExpiredAlerts);
 router.get("/api/alerts/low-stock", lowStockAlertController.getLowStockAlerts);
 router.get("/api/alerts/out-of-stock", outOfStockAlertController.getOutOfStockAlerts);
+router.get("/api/alerts/expired-batches", requireReportsRole, batchAlertsController.getExpiredBatches);
+router.get("/api/alerts/expiring-batches", requireReportsRole, batchAlertsController.getExpiringBatches);
+router.get("/api/alerts/expiring-batches/report", requireReportsRole, batchAlertsController.getExpiringBatchesForReport);
+router.get("/api/alerts/low-stock-batches", requireReportsRole, batchAlertsController.getLowStockBatches);
+router.get("/api/alerts/low-stock-batches/critical", requireReportsRole, batchAlertsController.getCriticalLowStockBatches);
+router.get("/api/alerts/low-stock-batches/alert", requireReportsRole, batchAlertsController.getAlertLowStockBatches);
+router.get("/api/alerts/out-of-stock-batches", requireReportsRole, batchAlertsController.getOutOfStockBatches);
 
 module.exports = router;
