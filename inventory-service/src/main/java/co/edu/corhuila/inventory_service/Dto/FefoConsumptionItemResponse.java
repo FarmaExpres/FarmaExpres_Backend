@@ -6,13 +6,13 @@ public class FefoConsumptionItemResponse {
     private Long batchId;
     private String batchCode;
     private LocalDate expirationDate;
-    private Integer consumedQuantity;
+    private Integer quantity;
 
-    public FefoConsumptionItemResponse(Long batchId, String batchCode, LocalDate expirationDate, Integer consumedQuantity) {
+    public FefoConsumptionItemResponse(Long batchId, String batchCode, LocalDate expirationDate, Integer quantity) {
         this.batchId = batchId;
         this.batchCode = batchCode;
         this.expirationDate = expirationDate;
-        this.consumedQuantity = consumedQuantity;
+        this.quantity = quantity;
     }
 
     public Long getBatchId() {
@@ -27,8 +27,12 @@ public class FefoConsumptionItemResponse {
         return expirationDate;
     }
 
+    public Integer getQuantity() {
+        return quantity;
+    }
+
     public Integer getConsumedQuantity() {
-        return consumedQuantity;
+        return quantity;
     }
 }
 
