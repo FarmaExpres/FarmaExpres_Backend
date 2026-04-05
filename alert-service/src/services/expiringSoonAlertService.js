@@ -11,12 +11,24 @@ const {
 const productRepository = require("../repositories/productRepository");
 
 async function getExpiringSoonAlerts() {
-  const products = await productRepository.findExpiringSoonProducts(
+  const products = await productRepository.findExpiringBatches(
     env.inventory.expiringSoonDays,
+    false,
   );
 
   const alerts = products.map((productRow) => {
-    const product = new Product(productRow);
+    const product = new Product({
+      id: productRow.productId,
+      code: productRow.productCode,
+      name: productRow.productName,
+      stock: productRow.availableStock,
+      minimumStock: productRow.minimumStock,
+      expirationDate: productRow.expirationDate,
+      active: true,
+      batchId: productRow.batchId,
+      batchCode: productRow.batchCode,
+      batchStatus: productRow.status,
+    });
     const diasRestantes = getDaysUntilDate(product.expirationDate);
     product.diasRestantes = diasRestantes;
     product.estado = resolveExpirationReportStatus(diasRestantes);
