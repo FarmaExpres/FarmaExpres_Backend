@@ -23,6 +23,17 @@ public interface BatchRepository extends JpaRepository<Batch, Long> {
 
     List<Batch> findByProductIdOrderByExpirationDateAsc(Long productId);
 
+    @Query("""
+            SELECT b
+            FROM Batch b
+            WHERE b.product.id = :productId
+              AND b.status IN :statuses
+              AND b.availableStock > 0
+              AND b.expirationDate >= CURRENT_DATE
+            ORDER BY b.createdAt ASC, b.id ASC
+            """)
+    List<Batch> findConsumableBatchesByProductIdOrderByCreatedAtAsc(Long productId, Collection<BatchStatus> statuses);
+
     boolean existsByProductIdAndBatchCodeIgnoreCase(Long productId, String batchCode);
 
     Optional<Batch> findByIdAndProductId(Long batchId, Long productId);

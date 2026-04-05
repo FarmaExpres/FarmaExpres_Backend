@@ -2,8 +2,11 @@ package co.edu.corhuila.inventory_service.Service;
 
 import co.edu.corhuila.inventory_service.Dto.InventoryEntryRequest;
 import co.edu.corhuila.inventory_service.Dto.InventoryEntryResponse;
+import co.edu.corhuila.inventory_service.Dto.InventoryExitRequest;
 import co.edu.corhuila.inventory_service.Dto.MotionResponse;
+import co.edu.corhuila.inventory_service.Dto.MovementExecutionResponse;
 import co.edu.corhuila.inventory_service.Dto.UserActivityReportResponse;
+import co.edu.corhuila.inventory_service.Entity.BatchStatus;
 import co.edu.corhuila.inventory_service.Entity.Batch;
 import co.edu.corhuila.inventory_service.Entity.Motion;
 import co.edu.corhuila.inventory_service.Entity.MovementType;
@@ -24,6 +27,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Collection;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -89,6 +93,124 @@ class MotionServiceTest {
         verify(batchService).createBatchForInventoryEntry(product, 25, LocalDate.of(2027, 2, 15));
         verify(motionRepository).save(org.mockito.ArgumentMatchers.any(Motion.class));
         SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    void shouldRegisterInventoryExitConsumingMultipleBatchesByRegistrationOrder() {
+        InventoryExitRequest request = new InventoryExitRequest();
+        request.setProductId(8L);
+        request.setQuantity(30);
+        request.setReason("Dispensacion");
+        request.setDetail("Salida registrada por entrega interna");
+
+        Product product = new Product();
+        product.setId(8L);
+        product.setCode("MET-001");
+        product.setName("Metformina");
+        product.setActive(true);
+
+        Batch firstBatch = new Batch();
+        firstBatch.setId(10L);
+        firstBatch.setBatchCode("LOT-MET-20260401-001");
+        firstBatch.setExpirationDate(LocalDate.of(2027, 1, 10));
+        firstBatch.setAvailableStock(15);
+        firstBatch.setStatus(BatchStatus.ACTIVE);
+        firstBatch.setProduct(product);
+
+        Batch secondBatch = new Batch();
+        secondBatch.setId(11L);
+        secondBatch.setBatchCode("LOT-MET-20260403-001");
+        secondBatch.setExpirationDate(LocalDate.of(2027, 3, 15));
+        secondBatch.setAvailableStock(20);
+        secondBatch.setStatus(BatchStatus.ACTIVE);
+        secondBatch.setProduct(product);
+
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
+                "farmaceutico@farmaexpres.local",
+                "token",
+                List.of(new SimpleGrantedAuthority("ROLE_FARMACEUTICO"))
+        ));
+
+        when(batchService.findProductOrThrow(8L)).thenReturn(product);
+        when(batchRepository.findConsumableBatchesByProductIdOrderByCreatedAtAsc(
+                org.mockito.ArgumentMatchers.eq(8L),
+                org.mockito.ArgumentMatchers.<Collection<BatchStatus>>any()
+        )).thenReturn(List.of(firstBatch, secondBatch));
+
+        MovementExecutionResponse response = motionService.registerInventoryExit(request);
+
+        assertEquals("Exit", response.getType());
+        assertEquals(8L, response.getProductId());
+        assertEquals(30, response.getRequestedQuantity());
+        assertEquals("Dispensacion", response.getReason());
+        assertEquals("Salida registrada por entrega interna", response.getDetail());
+        assertEquals(2, response.getAllocations().size());
+        assertEquals(10L, response.getAllocations().get(0).getBatchId());
+        assertEquals(15, response.getAllocations().get(0).getQuantity());
+        assertEquals(11L, response.getAllocations().get(1).getBatchId());
+        assertEquals(15, response.getAllocations().get(1).getQuantity());
+        assertEquals(0, firstBatch.getAvailableStock());
+        assertEquals(5, secondBatch.getAvailableStock());
+        verify(batchService).refreshBatchStatuses(8L);
+        verify(batchService).syncProductStock(product);
+        verify(motionRepository, org.mockito.Mockito.times(2)).save(org.mockito.ArgumentMatchers.any(Motion.class));
+        SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    void shouldRejectInventoryExitWhenReasonIsInvalid() {
+        InventoryExitRequest request = new InventoryExitRequest();
+        request.setProductId(8L);
+        request.setQuantity(10);
+        request.setReason("Traslado");
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> motionService.registerInventoryExit(request)
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+    }
+
+    @Test
+    void shouldRejectInventoryExitWhenRequestedQuantityExceedsAvailableStock() {
+        InventoryExitRequest request = new InventoryExitRequest();
+        request.setProductId(8L);
+        request.setQuantity(42);
+        request.setReason("Dispensacion");
+
+        Product product = new Product();
+        product.setId(8L);
+        product.setActive(true);
+
+        Batch firstBatch = new Batch();
+        firstBatch.setId(10L);
+        firstBatch.setBatchCode("LOT-MET-20260401-001");
+        firstBatch.setExpirationDate(LocalDate.of(2027, 1, 10));
+        firstBatch.setAvailableStock(15);
+        firstBatch.setStatus(BatchStatus.ACTIVE);
+
+        Batch secondBatch = new Batch();
+        secondBatch.setId(11L);
+        secondBatch.setBatchCode("LOT-MET-20260403-001");
+        secondBatch.setExpirationDate(LocalDate.of(2027, 3, 15));
+        secondBatch.setAvailableStock(20);
+        secondBatch.setStatus(BatchStatus.ACTIVE);
+
+        when(batchService.findProductOrThrow(8L)).thenReturn(product);
+        when(batchRepository.findConsumableBatchesByProductIdOrderByCreatedAtAsc(
+                org.mockito.ArgumentMatchers.eq(8L),
+                org.mockito.ArgumentMatchers.<Collection<BatchStatus>>any()
+        )).thenReturn(List.of(firstBatch, secondBatch));
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> motionService.registerInventoryExit(request)
+        );
+
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, exception.getStatusCode());
+        assertEquals(15, firstBatch.getAvailableStock());
+        assertEquals(20, secondBatch.getAvailableStock());
     }
 
     @Test
