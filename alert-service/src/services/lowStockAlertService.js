@@ -7,10 +7,21 @@ const { getCurrentTimestamp } = require("../utils/dateUtils");
 const productRepository = require("../repositories/productRepository");
 
 async function getLowStockAlerts() {
-  const products = await productRepository.findLowStockProducts();
+  const products = await productRepository.findLowStockBatches();
 
   const alerts = products.map((productRow) => {
-    const product = new Product(productRow);
+    const product = new Product({
+      id: productRow.productId,
+      code: productRow.productCode,
+      name: productRow.productName,
+      stock: productRow.availableStock,
+      minimumStock: productRow.minimumStock,
+      expirationDate: productRow.expirationDate,
+      active: true,
+      batchId: productRow.batchId,
+      batchCode: productRow.batchCode,
+      batchStatus: productRow.status,
+    });
 
     return new Alert({
       type: ALERT_TYPES.LOW_STOCK,

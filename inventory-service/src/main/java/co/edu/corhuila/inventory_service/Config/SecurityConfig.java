@@ -35,21 +35,57 @@ public class SecurityConfig {
                         .requestMatchers("/status").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
 
+                        // Product batches
+                        .requestMatchers(HttpMethod.POST, "/api/products/*/batches")
+                        .hasAnyRole("ADMIN", "FARMACEUTICO")
+
                         // Products: ADMIN can create, update and delete
                         .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
 
+                        // Reports (products): only ADMIN and AUDITOR
+                        .requestMatchers(HttpMethod.GET, "/api/products/active-table")
+                        .hasAnyRole("ADMIN", "AUDITOR")
+                        .requestMatchers(HttpMethod.GET, "/api/products/active-summary")
+                        .hasAnyRole("ADMIN", "AUDITOR")
+                        .requestMatchers(HttpMethod.GET, "/api/products/fefo-snapshot")
+                        .hasAnyRole("ADMIN", "FARMACEUTICO")
+
                         // Products: ADMIN, PHARMACIST and AUDITOR can view
                         .requestMatchers(HttpMethod.GET, "/api/products/**")
                         .hasAnyRole("ADMIN", "FARMACEUTICO", "AUDITOR")
 
-                        // Motions/Movements: ADMIN and AUDITOR can view
-                        .requestMatchers(HttpMethod.GET, "/api/movements/**")
+                        // Reports (movements): only ADMIN and AUDITOR
+                        .requestMatchers(HttpMethod.GET, "/api/movements")
                         .hasAnyRole("ADMIN", "AUDITOR")
+                        .requestMatchers(HttpMethod.GET, "/api/movements/entrance")
+                        .hasAnyRole("ADMIN", "AUDITOR")
+                        .requestMatchers(HttpMethod.GET, "/api/movements/exit")
+                        .hasAnyRole("ADMIN", "AUDITOR")
+                        .requestMatchers(HttpMethod.GET, "/api/movements/updated")
+                        .hasAnyRole("ADMIN", "AUDITOR")
+                        .requestMatchers(HttpMethod.GET, "/api/movements/report/users-activity")
+                        .hasAnyRole("ADMIN", "AUDITOR")
+                        .requestMatchers(HttpMethod.GET, "/api/movements/filter-by-user")
+                        .hasAnyRole("ADMIN", "AUDITOR")
+
+                        // Legacy aliases for movements (kept restricted to reporting roles)
                         .requestMatchers(HttpMethod.GET, "/api/motions/**")
                         .hasAnyRole("ADMIN", "AUDITOR")
                         .requestMatchers(HttpMethod.GET, "/api/Motion/**")
+                        .hasAnyRole("ADMIN", "AUDITOR")
+
+                        // Other movement reads (if any future path): ADMIN, AUDITOR and FARMACEUTICO
+                        .requestMatchers(HttpMethod.GET, "/api/movements/**")
+                        .hasAnyRole("ADMIN", "AUDITOR", "FARMACEUTICO")
+
+                        // Batch-aware movements
+                        .requestMatchers(HttpMethod.POST, "/api/movements/**")
+                        .hasAnyRole("ADMIN", "FARMACEUTICO")
+
+                        // Reports namespace
+                        .requestMatchers(HttpMethod.GET, "/api/reports/**")
                         .hasAnyRole("ADMIN", "AUDITOR")
 
                         // Everything else requires authentication

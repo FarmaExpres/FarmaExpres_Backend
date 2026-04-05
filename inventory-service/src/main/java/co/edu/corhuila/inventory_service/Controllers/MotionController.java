@@ -2,11 +2,16 @@ package co.edu.corhuila.inventory_service.Controllers;
 
 
 
+import co.edu.corhuila.inventory_service.Dto.FefoConsumeRequest;
 import co.edu.corhuila.inventory_service.Dto.MotionResponse;
+import co.edu.corhuila.inventory_service.Dto.MovementExecutionResponse;
+import co.edu.corhuila.inventory_service.Dto.MovementRequest;
 import co.edu.corhuila.inventory_service.Dto.UserActivityReportResponse;
 import co.edu.corhuila.inventory_service.Service.MotionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -53,5 +58,15 @@ public class MotionController {
     public ResponseEntity<List<UserActivityReportResponse>> listUsersActivityReport(
             @RequestParam(required = false) String role) {
         return ResponseEntity.ok(motionService.listUsersActivityReport(role));
+    }
+
+    @PostMapping("/api/movements")
+    public ResponseEntity<MovementExecutionResponse> createMovement(@RequestBody MovementRequest request) {
+        return ResponseEntity.ok(motionService.createMovement(request));
+    }
+
+    @PostMapping("/api/movements/consume-fefo")
+    public ResponseEntity<MovementExecutionResponse> consumeFefo(@RequestBody FefoConsumeRequest request) {
+        return ResponseEntity.ok(motionService.consumeFefo(request));
     }
 }
