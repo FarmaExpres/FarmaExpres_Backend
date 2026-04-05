@@ -14,4 +14,6 @@ public interface MotionRepository extends JpaRepository<Motion, Long> {
     List<Motion> findAllByOrderByDateTimeDesc();
 
     List<Motion> findByUserIdOrderByDateTimeDesc(Long userId);
+
+    List<Motion> findByBatchIsNotNullOrderByDateTimeDesc();
 }

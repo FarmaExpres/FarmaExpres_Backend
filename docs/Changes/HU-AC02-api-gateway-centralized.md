@@ -135,3 +135,26 @@ La HU se considerara terminada cuando:
 - `api-gateway/src/main/resources/application.yaml`
 - `api-gateway/src/test/java/co/edu/corhuila/api_gateway/StatusControllerTest.java`
 - `docs/Guia_Inicializacion_Backend_Frontend.md`
+
+## 16. Actualizacion HU-ACFE-03 (2026-04-04)
+
+Con la alineacion FE/BE por lotes, el gateway tambien debe considerar como rutas oficiales adicionales:
+
+### Alertas y reportes batch-aware
+- `GET /api/alerts/expired-batches`
+- `GET /api/alerts/expiring-batches`
+- `GET /api/alerts/expiring-batches/report`
+- `GET /api/alerts/low-stock-batches`
+- `GET /api/alerts/low-stock-batches/critical`
+- `GET /api/alerts/low-stock-batches/alert`
+- `GET /api/alerts/out-of-stock-batches`
+- `GET /api/reports/alerts-batches`
+
+### Inventario / reportes batch
+- `GET /api/reports/inventory-batches`
+- `GET /api/reports/movements-batches`
+- `GET /api/products/fefo-snapshot`
+
+Nota de compatibilidad:
+- endpoints legacy (`/api/alerts/expired`, `/api/alerts/expiring-soon`, etc.) pueden seguir temporalmente,
+  pero las nuevas integraciones deben priorizar contratos batch-aware.

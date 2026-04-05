@@ -7,10 +7,21 @@ const { resolveExpirationReportStatus } = require("../utils/alertUtils");
 const productRepository = require("../repositories/productRepository");
 
 async function getExpiredAlerts() {
-  const products = await productRepository.findExpiredProducts();
+  const products = await productRepository.findExpiredBatches();
 
   const alerts = products.map((productRow) => {
-    const product = new Product(productRow);
+    const product = new Product({
+      id: productRow.productId,
+      code: productRow.productCode,
+      name: productRow.productName,
+      stock: productRow.availableStock,
+      minimumStock: productRow.minimumStock,
+      expirationDate: productRow.expirationDate,
+      active: true,
+      batchId: productRow.batchId,
+      batchCode: productRow.batchCode,
+      batchStatus: productRow.status,
+    });
     const diasRestantes = getDaysUntilDate(product.expirationDate);
     product.diasRestantes = diasRestantes;
     product.estado = resolveExpirationReportStatus(diasRestantes);
