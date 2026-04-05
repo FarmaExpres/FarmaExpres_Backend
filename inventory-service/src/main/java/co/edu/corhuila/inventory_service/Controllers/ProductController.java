@@ -2,9 +2,13 @@ package co.edu.corhuila.inventory_service.Controllers;
 
 import co.edu.corhuila.inventory_service.Dto.ActiveInventorySummaryResponse;
 import co.edu.corhuila.inventory_service.Dto.ActiveInventoryTableItemResponse;
+import co.edu.corhuila.inventory_service.Dto.BatchResponse;
+import co.edu.corhuila.inventory_service.Dto.CreateBatchRequest;
+import co.edu.corhuila.inventory_service.Dto.FefoSnapshotResponse;
 import co.edu.corhuila.inventory_service.Dto.LowStockReportItemResponse;
 import co.edu.corhuila.inventory_service.Dto.ProductOutOfStockResponse;
 import co.edu.corhuila.inventory_service.Entity.Product;
+import co.edu.corhuila.inventory_service.Service.BatchService;
 import co.edu.corhuila.inventory_service.Service.ProductService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,9 +21,11 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService productService;
+    private final BatchService batchService;
 
-    public ProductController(ProductService productService) {
+    public ProductController(ProductService productService, BatchService batchService) {
         this.productService = productService;
+        this.batchService = batchService;
     }
 
     @PostMapping
@@ -49,7 +55,12 @@ public class ProductController {
         return productService.listProducts();
     }
 
-    @GetMapping("/Assets")
+    @GetMapping("/{id}")
+    public ResponseEntity<Product> getProductById(@PathVariable Long id) {
+        return ResponseEntity.ok(productService.getProductById(id));
+    }
+
+    @GetMapping({"/Assets", "/assets", "/active"})
     public ResponseEntity<List<Product>> listActiveProducts() {
         return ResponseEntity.ok(productService.listActiveProducts());
     }
@@ -62,6 +73,11 @@ public class ProductController {
     @GetMapping("/active-summary")
     public ResponseEntity<ActiveInventorySummaryResponse> getActiveInventorySummary() {
         return ResponseEntity.ok(productService.getActiveInventorySummary());
+    }
+
+    @GetMapping("/fefo-snapshot")
+    public ResponseEntity<FefoSnapshotResponse> getFefoSnapshot() {
+        return ResponseEntity.ok(productService.getFefoSnapshot());
     }
 
     @GetMapping("/out-of-stock")
@@ -82,5 +98,18 @@ public class ProductController {
     @GetMapping({"/low-stock/alert", "/low-stock-report/alert"})
     public ResponseEntity<List<LowStockReportItemResponse>> getAlertLowStockProducts() {
         return ResponseEntity.ok(productService.getAlertLowStockProducts());
+    }
+
+    @GetMapping("/{productId}/batches")
+    public ResponseEntity<List<BatchResponse>> listBatchesByProduct(@PathVariable Long productId) {
+        return ResponseEntity.ok(batchService.listBatchesByProduct(productId));
+    }
+
+    @PostMapping("/{productId}/batches")
+    public ResponseEntity<BatchResponse> createBatchByProduct(
+            @PathVariable Long productId,
+            @RequestBody CreateBatchRequest request
+    ) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(batchService.createBatch(productId, request));
     }
 }
