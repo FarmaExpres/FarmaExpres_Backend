@@ -2,6 +2,8 @@ package co.edu.corhuila.inventory_service.Service;
 
 import co.edu.corhuila.inventory_service.Dto.FefoConsumeRequest;
 import co.edu.corhuila.inventory_service.Dto.FefoConsumptionItemResponse;
+import co.edu.corhuila.inventory_service.Dto.InventoryEntryRequest;
+import co.edu.corhuila.inventory_service.Dto.InventoryEntryResponse;
 import co.edu.corhuila.inventory_service.Dto.MotionResponse;
 import co.edu.corhuila.inventory_service.Dto.MovementBatchReportItemResponse;
 import co.edu.corhuila.inventory_service.Dto.MovementExecutionResponse;
@@ -24,11 +26,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 public class MotionService {
@@ -36,6 +41,12 @@ public class MotionService {
     private static final String SYSTEM_USER_NAME = "Sistema";
     private static final String SYSTEM_USER_EMAIL = "system@farmaexpres.local";
     private static final String SYSTEM_USER_ROLE = "Automatico";
+    private static final Set<String> ALLOWED_ENTRY_REASONS = new LinkedHashSet<>(Arrays.asList(
+            "Compra proveedor",
+            "Devolucion",
+            "Donacion",
+            "Ajuste inventario"
+    ));
 
     private final MotionRepository motionRepository;
     private final BatchRepository batchRepository;
@@ -128,6 +139,53 @@ public class MotionService {
                         .comparing(UserActivityReportResponse::getTotalMovements, Comparator.reverseOrder())
                         .thenComparing(UserActivityReportResponse::getUserName, String.CASE_INSENSITIVE_ORDER))
                 .toList();
+    }
+
+    @Transactional
+    public InventoryEntryResponse registerInventoryEntry(InventoryEntryRequest request) {
+        validateInventoryEntryRequest(request);
+        Product product = batchService.findProductOrThrow(request.getProductId());
+        if (!product.isActive()) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    "No se pueden registrar entradas para productos retirados"
+            );
+        }
+
+        Batch createdBatch = batchService.createBatchForInventoryEntry(
+                product,
+                request.getQuantity(),
+                request.getExpirationDate()
+        );
+
+        MotionActorContext actor = extractMotionActor();
+        Motion motion = new Motion(
+                MovementType.Entrance,
+                request.getQuantity(),
+                product,
+                request.getReason(),
+                actor.userId(),
+                actor.userName(),
+                actor.userEmail(),
+                actor.userRole()
+        );
+        motion.setObservation(normalizeOptionalText(request.getDetail()));
+        motion.setBatch(createdBatch);
+        motionRepository.save(motion);
+
+        return new InventoryEntryResponse(
+                MovementType.Entrance.name(),
+                product.getId(),
+                request.getQuantity(),
+                request.getReason(),
+                normalizeOptionalText(request.getDetail()),
+                List.of(new FefoConsumptionItemResponse(
+                        createdBatch.getId(),
+                        createdBatch.getBatchCode(),
+                        createdBatch.getExpirationDate(),
+                        request.getQuantity()
+                ))
+        );
     }
 
     @Transactional
@@ -356,6 +414,40 @@ public class MotionService {
         if (request.getReason() == null || request.getReason().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "reason es obligatorio");
         }
+    }
+
+    private void validateInventoryEntryRequest(InventoryEntryRequest request) {
+        if (request == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Payload requerido");
+        }
+        if (request.getProductId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "productId es obligatorio");
+        }
+        if (request.getQuantity() == null || request.getQuantity() <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "quantity debe ser mayor a 0");
+        }
+        if (request.getReason() == null || request.getReason().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "reason es obligatorio");
+        }
+        if (!ALLOWED_ENTRY_REASONS.contains(request.getReason().trim())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "reason invalido. Valores permitidos: " + String.join(", ", ALLOWED_ENTRY_REASONS)
+            );
+        }
+        if (request.getExpirationDate() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "expirationDate es obligatorio");
+        }
+        if (request.getExpirationDate().isBefore(java.time.LocalDate.now())) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    "expirationDate no puede corresponder a una fecha vencida"
+            );
+        }
+    }
+
+    private String normalizeOptionalText(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 
     private String composeReason(String reason, String detail) {

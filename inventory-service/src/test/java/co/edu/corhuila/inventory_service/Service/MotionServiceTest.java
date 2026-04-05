@@ -1,23 +1,33 @@
 package co.edu.corhuila.inventory_service.Service;
 
+import co.edu.corhuila.inventory_service.Dto.InventoryEntryRequest;
+import co.edu.corhuila.inventory_service.Dto.InventoryEntryResponse;
 import co.edu.corhuila.inventory_service.Dto.MotionResponse;
 import co.edu.corhuila.inventory_service.Dto.UserActivityReportResponse;
+import co.edu.corhuila.inventory_service.Entity.Batch;
 import co.edu.corhuila.inventory_service.Entity.Motion;
 import co.edu.corhuila.inventory_service.Entity.MovementType;
 import co.edu.corhuila.inventory_service.Entity.Product;
+import co.edu.corhuila.inventory_service.Repository.BatchRepository;
 import co.edu.corhuila.inventory_service.Repository.MotionRepository;
-import co.edu.corhuila.inventory_service.Repository.ProductRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -28,10 +38,97 @@ class MotionServiceTest {
     private MotionRepository motionRepository;
 
     @Mock
-    private ProductRepository productRepository;
+    private BatchRepository batchRepository;
+
+    @Mock
+    private BatchService batchService;
 
     @InjectMocks
     private MotionService motionService;
+
+    @Test
+    void shouldRegisterInventoryEntryCreatingNewBatchAndMovement() {
+        InventoryEntryRequest request = new InventoryEntryRequest();
+        request.setProductId(8L);
+        request.setQuantity(25);
+        request.setReason("Compra proveedor");
+        request.setDetail("Ingreso correspondiente a factura FP-2031");
+        request.setExpirationDate(LocalDate.of(2027, 2, 15));
+
+        Product product = new Product();
+        product.setId(8L);
+        product.setCode("MET-001");
+        product.setName("Metformina");
+        product.setActive(true);
+
+        Batch batch = new Batch();
+        batch.setId(31L);
+        batch.setBatchCode("LOT-MET001-20260405-001");
+        batch.setExpirationDate(LocalDate.of(2027, 2, 15));
+
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
+                "farmaceutico@farmaexpres.local",
+                "token",
+                List.of(new SimpleGrantedAuthority("ROLE_FARMACEUTICO"))
+        ));
+
+        when(batchService.findProductOrThrow(8L)).thenReturn(product);
+        when(batchService.createBatchForInventoryEntry(product, 25, LocalDate.of(2027, 2, 15))).thenReturn(batch);
+
+        InventoryEntryResponse response = motionService.registerInventoryEntry(request);
+
+        assertEquals("Entrance", response.getType());
+        assertEquals(8L, response.getProductId());
+        assertEquals(25, response.getRequestedQuantity());
+        assertEquals("Compra proveedor", response.getReason());
+        assertEquals("Ingreso correspondiente a factura FP-2031", response.getDetail());
+        assertEquals(1, response.getAllocations().size());
+        assertEquals(31L, response.getAllocations().get(0).getBatchId());
+        assertEquals("LOT-MET001-20260405-001", response.getAllocations().get(0).getBatchCode());
+        verify(batchService).findProductOrThrow(8L);
+        verify(batchService).createBatchForInventoryEntry(product, 25, LocalDate.of(2027, 2, 15));
+        verify(motionRepository).save(org.mockito.ArgumentMatchers.any(Motion.class));
+        SecurityContextHolder.clearContext();
+    }
+
+    @Test
+    void shouldRejectInventoryEntryWhenExpirationDateIsExpired() {
+        InventoryEntryRequest request = new InventoryEntryRequest();
+        request.setProductId(8L);
+        request.setQuantity(25);
+        request.setReason("Compra proveedor");
+        request.setExpirationDate(LocalDate.now().minusDays(1));
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> motionService.registerInventoryEntry(request)
+        );
+
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, exception.getStatusCode());
+    }
+
+    @Test
+    void shouldRejectInventoryEntryForInactiveProduct() {
+        InventoryEntryRequest request = new InventoryEntryRequest();
+        request.setProductId(8L);
+        request.setQuantity(10);
+        request.setReason("Donacion");
+        request.setExpirationDate(LocalDate.now().plusDays(30));
+
+        Product product = new Product();
+        product.setId(8L);
+        product.setActive(false);
+
+        when(batchService.findProductOrThrow(8L)).thenReturn(product);
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> motionService.registerInventoryEntry(request)
+        );
+
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, exception.getStatusCode());
+        verify(batchService).findProductOrThrow(8L);
+    }
 
     @Test
     void shouldListOnlyEntranceMotion() {
