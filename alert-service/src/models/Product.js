@@ -9,6 +9,9 @@ class Product {
     minimumStock,
     expirationDate,
     active,
+    batchId,
+    batchCode,
+    batchStatus,
   }) {
     this.id = String(id);
     this.code = code;
@@ -17,6 +20,9 @@ class Product {
     this.minimumStock = Number(minimumStock);
     this.expirationDate = formatDateOnly(expirationDate);
     this.active = Boolean(active);
+    this.batchId = batchId != null ? String(batchId) : null;
+    this.batchCode = batchCode ?? null;
+    this.batchStatus = batchStatus ?? null;
   }
 }
 
