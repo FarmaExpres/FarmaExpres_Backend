@@ -70,6 +70,11 @@ public class Motion {
     @JsonIgnore
     private Product product;
 
+    @ManyToOne
+    @JoinColumn(name = "batch_id")
+    @JsonIgnore
+    private Batch batch;
+
     public Motion() {}
 
     public Motion(MovementType type,
@@ -232,6 +237,14 @@ public class Motion {
 
     public void setAdjustmentDetail(String adjustmentDetail) {
         this.adjustmentDetail = adjustmentDetail;
+    }
+
+    public Batch getBatch() {
+        return batch;
+    }
+
+    public void setBatch(Batch batch) {
+        this.batch = batch;
     }
 }
 
