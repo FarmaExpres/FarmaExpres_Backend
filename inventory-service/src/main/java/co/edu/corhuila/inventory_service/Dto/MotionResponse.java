@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import co.edu.corhuila.inventory_service.Entity.Motion;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 public class MotionResponse {
@@ -18,7 +19,11 @@ public class MotionResponse {
     private Integer amount;
     private Long productId;
     private String productName;
+    private Long batchId;
+    private String batchCode;
+    private LocalDate batchExpirationDate;
     private String reason;
+    private String detail;
     private Long userId;
     private String userName;
     private String userEmail;
@@ -84,12 +89,44 @@ public class MotionResponse {
         this.productName = productName;
     }
 
+    public Long getBatchId() {
+        return batchId;
+    }
+
+    public void setBatchId(Long batchId) {
+        this.batchId = batchId;
+    }
+
+    public String getBatchCode() {
+        return batchCode;
+    }
+
+    public void setBatchCode(String batchCode) {
+        this.batchCode = batchCode;
+    }
+
+    public LocalDate getBatchExpirationDate() {
+        return batchExpirationDate;
+    }
+
+    public void setBatchExpirationDate(LocalDate batchExpirationDate) {
+        this.batchExpirationDate = batchExpirationDate;
+    }
+
     public String getReason() {
         return reason;
     }
 
     public void setReason(String reason) {
         this.reason = reason;
+    }
+
+    public String getDetail() {
+        return detail;
+    }
+
+    public void setDetail(String detail) {
+        this.detail = detail;
     }
 
     public Long getUserId() {
@@ -185,9 +222,17 @@ public class MotionResponse {
         this.type = m.getType().name();
         this.amount = m.getAmount();
         this.dateTime = m.getDateTime();
-        this.productId = m.getProduct().getId();
-        this.productName = m.getProduct().getName();
+        if (m.getProduct() != null) {
+            this.productId = m.getProduct().getId();
+            this.productName = m.getProduct().getName();
+        }
+        if (m.getBatch() != null) {
+            this.batchId = m.getBatch().getId();
+            this.batchCode = m.getBatch().getBatchCode();
+            this.batchExpirationDate = m.getBatch().getExpirationDate();
+        }
         this.reason = m.getReason();
+        this.detail = m.getObservation();
         this.userId = m.getUserId();
         this.userName = firstNotBlank(m.getUserName(), SYSTEM_USER_NAME);
         this.userEmail = firstNotBlank(m.getUserEmail(), SYSTEM_USER_EMAIL);
