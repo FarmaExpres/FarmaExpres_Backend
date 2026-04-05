@@ -3,6 +3,8 @@ package co.edu.corhuila.inventory_service.Controllers;
 
 
 import co.edu.corhuila.inventory_service.Dto.FefoConsumeRequest;
+import co.edu.corhuila.inventory_service.Dto.InventoryEntryRequest;
+import co.edu.corhuila.inventory_service.Dto.InventoryEntryResponse;
 import co.edu.corhuila.inventory_service.Dto.MotionResponse;
 import co.edu.corhuila.inventory_service.Dto.MovementExecutionResponse;
 import co.edu.corhuila.inventory_service.Dto.MovementRequest;
@@ -63,6 +65,11 @@ public class MotionController {
     @PostMapping("/api/movements")
     public ResponseEntity<MovementExecutionResponse> createMovement(@RequestBody MovementRequest request) {
         return ResponseEntity.ok(motionService.createMovement(request));
+    }
+
+    @PostMapping("/api/movements/entries")
+    public ResponseEntity<InventoryEntryResponse> registerInventoryEntry(@RequestBody InventoryEntryRequest request) {
+        return ResponseEntity.ok(motionService.registerInventoryEntry(request));
     }
 
     @PostMapping("/api/movements/consume-fefo")

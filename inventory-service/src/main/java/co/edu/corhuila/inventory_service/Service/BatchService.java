@@ -14,12 +14,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
 @Service
 public class BatchService {
+    private static final DateTimeFormatter BATCH_DATE_FORMAT = DateTimeFormatter.BASIC_ISO_DATE;
+
     private final BatchRepository batchRepository;
     private final ProductRepository productRepository;
 
@@ -98,6 +101,43 @@ public class BatchService {
         batch.setAvailableStock(product.getStock());
         batch.setStatus(resolveBatchStatus(product.getStock(), product.getExpirationDate()));
         return batchRepository.save(batch);
+    }
+
+    @Transactional
+    public Batch createBatchForInventoryEntry(Product product, Integer quantity, LocalDate expirationDate) {
+        if (product == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Producto requerido");
+        }
+        if (!product.isActive()) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    "No se pueden registrar entradas para productos retirados"
+            );
+        }
+        if (quantity == null || quantity <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "quantity debe ser mayor a 0");
+        }
+        if (expirationDate == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "expirationDate es obligatorio");
+        }
+        if (expirationDate.isBefore(LocalDate.now())) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    "expirationDate no puede corresponder a una fecha vencida"
+            );
+        }
+
+        Batch batch = new Batch();
+        batch.setProduct(product);
+        batch.setBatchCode(generateInventoryEntryBatchCode(product));
+        batch.setExpirationDate(expirationDate);
+        batch.setInitialStock(quantity);
+        batch.setAvailableStock(quantity);
+        batch.setStatus(resolveBatchStatus(quantity, expirationDate));
+
+        Batch saved = batchRepository.save(batch);
+        syncProductStock(product);
+        return saved;
     }
 
     @Transactional
@@ -236,6 +276,47 @@ public class BatchService {
         if (request.getInitialStock() == null || request.getInitialStock() < 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "initialStock debe ser mayor o igual a 0");
         }
+    }
+
+    private String generateInventoryEntryBatchCode(Product product) {
+        String productCode = sanitizeBatchSegment(product.getCode());
+        String dateSegment = LocalDate.now().format(BATCH_DATE_FORMAT);
+        String prefix = "LOT-" + productCode + "-" + dateSegment + "-";
+
+        List<Batch> existingBatches = batchRepository.findByProductIdOrderByExpirationDateAsc(product.getId());
+        int nextSequence = existingBatches.stream()
+                .map(Batch::getBatchCode)
+                .filter(Objects::nonNull)
+                .filter(code -> code.startsWith(prefix))
+                .map(code -> code.substring(prefix.length()))
+                .map(this::parseBatchSequence)
+                .filter(Objects::nonNull)
+                .mapToInt(Integer::intValue)
+                .max()
+                .orElse(0) + 1;
+
+        return prefix + String.format("%03d", nextSequence);
+    }
+
+    private Integer parseBatchSequence(String rawSequence) {
+        try {
+            return Integer.parseInt(rawSequence);
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
+    private String sanitizeBatchSegment(String value) {
+        if (value == null || value.isBlank()) {
+            return "GEN";
+        }
+
+        String sanitized = value.trim().toUpperCase().replaceAll("[^A-Z0-9]+", "");
+        if (sanitized.isBlank()) {
+            return "GEN";
+        }
+
+        return sanitized.length() <= 6 ? sanitized : sanitized.substring(0, 6);
     }
 
     private void recalculateProductStockFromActiveBatches(Product product, boolean persistProduct) {
