@@ -1,5 +1,17 @@
 # HU-010 - DTO para tabla de inventario activo (inventory-service)
 
+## Actualizacion HU-ACFE-03 (2026-04-04)
+
+Esta HU sigue vigente para tabla de inventario activo.  
+Se recomienda complementar la vista con `GET /api/products/fefo-snapshot` para evitar consultas por producto al cargar:
+
+- proximo lote FEFO
+- proximo vencimiento operativo
+- stock operativo real por lotes activos
+
+Nota:
+- si un producto no tiene lote activo consumible, backend retorna `nextBatchCode = null` y `nextExpirationDate = null`.
+
 ## 1. Informacion general
 - HU: `HU-010`
 - Nombre: Consulta de productos activos para tabla de inventario

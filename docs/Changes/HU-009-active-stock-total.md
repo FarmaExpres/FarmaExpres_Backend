@@ -1,5 +1,21 @@
 # HU-009 - Resumen de stock y valor total de productos activos (inventory-service)
 
+## Actualizacion HU-ACFE-03 (2026-04-04)
+
+Se mantiene vigente `GET /api/products/active-summary`.  
+Adicionalmente se incorporo endpoint optimizado para snapshot FEFO por producto:
+
+- `GET /api/products/fefo-snapshot`
+
+Este endpoint reduce N+1 en frontend y devuelve por producto:
+- `operationalStock`
+- `nextBatchCode`
+- `nextExpirationDate`
+- `activeBatchesCount`
+
+Regla operativa:
+- solo lotes `ACTIVE`, con `availableStock > 0` y no vencidos.
+
 ## 1. Informacion general
 - HU: `HU-009`
 - Nombre: Consulta del total de stock y valor total de productos activos
