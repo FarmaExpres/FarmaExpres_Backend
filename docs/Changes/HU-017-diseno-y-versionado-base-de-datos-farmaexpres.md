@@ -4,7 +4,7 @@
 - HU: `HU-017`
 - Nombre: Diseno y versionado de la base de datos de FarmaExpres
 - Componente principal: `database`
-- Estado: Propuesta funcional para implementacion de base de datos
+- Estado: Implementado a nivel de estructura base y seguridad tecnica inicial
 - Rama de trabajo sugerida: `HU-017-dev`
 
 ## 2. Objetivo de la HU
@@ -84,6 +84,18 @@ Esta HU propone como alcance inicial:
 
 La HU se enfoca en justificar y gobernar la construccion de la base de datos del proyecto, no solo en crear tablas aisladas.
 
+## 8.1 Implementacion realizada
+Como resultado de esta HU, el proyecto ya cuenta con una implementacion inicial alineada con la propuesta:
+- estructura versionada dentro de `database/`
+- archivo `bootstrap.sql` para crear las bases `farmaexpres_users` y `farmaexpres_inventory`
+- changelogs maestros independientes para `auth` e `inventory`
+- separacion por capas `01_ddl`, `02_dml`, `03_dcl`, `04_tcl` y `05_rollbacks`
+- migraciones base para tablas y datos semilla de autenticacion e inventario
+- integracion de `Liquibase` en `docker-compose`
+- configuracion de microservicios con `ddl-auto: validate`
+
+Esto deja la base de datos bajo control de migraciones y no bajo generacion automatica de Hibernate.
+
 ## 9. Modelo funcional esperado
 La base de datos de `FarmaExpres` debe quedar preparada para representar al menos estos dominios:
 - `security` o modulo equivalente para usuarios, roles y bitacora
@@ -115,12 +127,55 @@ La implementacion futura de esta HU deberia contemplar:
 - configuracion de `docker-compose` para PostgreSQL y tooling de Liquibase
 - documentacion de arquitectura de capas
 
+## 11.1 Seguridad tecnica implementada en DCL
+Dentro de la capa `03_dcl` se implemento una estrategia inicial de seguridad tecnica basada en roles de base de datos.
+
+Para la base `farmaexpres_users` se definieron:
+- `farmaexpres_auth_app`
+- `farmaexpres_auth_readonly`
+
+Para la base `farmaexpres_inventory` se definieron:
+- `farmaexpres_inventory_app`
+- `farmaexpres_inventory_readonly`
+
+Permisos asignados:
+- los roles `*_app` tienen `SELECT`, `INSERT`, `UPDATE` y `DELETE` sobre las tablas funcionales de su base
+- los roles `*_app` tienen permisos sobre las secuencias necesarias para operar inserts
+- los roles `*_readonly` tienen solo `SELECT` sobre tablas y secuencias
+- todos estos roles tienen `USAGE` sobre el esquema `public`
+
+Esta definicion permite separar lectura y escritura a nivel tecnico y deja preparada una base mas segura para futuras conexiones por microservicio.
+
+## 11.2 Aclaracion sobre roles tecnicos y roles de negocio
+La implementacion DCL no reemplaza los roles funcionales del sistema.
+
+Es importante distinguir:
+- roles tecnicos de base de datos: controlan que puede hacer una conexion sobre PostgreSQL
+- roles de negocio: controlan que puede hacer un usuario dentro del sistema y del backend
+
+Roles de negocio ya presentes en el dominio:
+- `ADMIN`
+- `AUDITOR`
+- `FARMACEUTICO`
+
+Roles tecnicos implementados en DCL:
+- `farmaexpres_auth_app`
+- `farmaexpres_auth_readonly`
+- `farmaexpres_inventory_app`
+- `farmaexpres_inventory_readonly`
+
+Por lo tanto:
+- `ADMIN`, `AUDITOR` y `FARMACEUTICO` siguen siendo roles funcionales del negocio
+- los roles DCL creados son roles tecnicos para acceso controlado a la base
+- el usuario `postgres` sigue siendo administrador total del motor y no representa un rol funcional del sistema
+
 ## 12. Fuera de alcance de esta HU
 No hace parte de esta HU:
 - implementar en este momento todos los endpoints del backend
 - migrar inmediatamente toda la logica de los microservicios
 - poblar datos finales de negocio completos
 - redefinir todo el dominio funcional del proyecto
+- reemplazar en este momento las conexiones de los microservicios para que dejen de usar `postgres`
 
 Esta HU primero justifica y formaliza la necesidad de construir la base de datos con una arquitectura versionada.
 
@@ -131,6 +186,8 @@ Esta HU primero justifica y formaliza la necesidad de construir la base de datos
 4. La HU debe proponer una organizacion por capas para los cambios SQL.
 5. La HU debe identificar los dominios principales que la base de datos debe soportar.
 6. La HU debe dejar claro que el objetivo es construir una base de datos mantenible, auditable y preparada para crecer.
+7. La HU debe dejar documentada una estrategia inicial de seguridad tecnica en la capa `DCL`.
+8. La HU debe diferenciar roles tecnicos de base de datos y roles funcionales del negocio.
 
 ## 14. Resultado esperado de negocio
 Al aprobar esta HU, el equipo contara con una justificacion clara para iniciar la construccion formal de la base de datos del proyecto bajo una estrategia de versionado, despliegue controlado y crecimiento ordenado.
@@ -140,3 +197,18 @@ Esto servira como base para las siguientes tareas tecnicas:
 - modelado inicial de esquemas y tablas
 - implementacion de migraciones
 - integracion con el backend existente
+
+## 15. Estado actual posterior a la implementacion
+Con lo realizado hasta ahora, el proyecto ya cuenta con:
+- bases separadas para autenticacion e inventario
+- migraciones gestionadas con `Liquibase`
+- tablas funcionales creadas por changelogs
+- datos semilla iniciales
+- rollbacks organizados por capa
+- capa `DCL` con roles tecnicos de lectura y escritura por base
+
+Pendientes recomendados para una fase posterior:
+- crear usuarios de login asociados a los roles tecnicos
+- migrar los microservicios para que usen esos usuarios y no `postgres`
+- ampliar `DCL` con politicas mas finas si el proyecto lo requiere
+- evaluar si `alert-service` necesitara solo lectura o persistencia propia en fases futuras
