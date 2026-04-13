@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: inventory-204-create-login-users
+      author: codex
+      comment: Crea usuarios login de prueba y los asocia a los roles tecnicos de inventory.
+      changes:
+        - sqlFile:
+            path: 001_create_login_users.sql
+            relativeToChangelogFile: true
+            stripComments: false
+            splitStatements: false
+      rollback:
+        - sqlFile:
+            path: ../../../05_rollbacks/03_dcl/00_users/001_create_login_users.rollback.sql
+            relativeToChangelogFile: true
+            stripComments: false
+            splitStatements: false
