@@ -4,7 +4,7 @@
 - HU: `HU-018`
 - Nombre: Definir estrategia de puertos por ambiente para backend, frontend y base de datos
 - Componente principal: `infraestructura`
-- Estado: Propuesta funcional y tecnica documentada
+- Estado: Implementado funcional y tecnica documentada
 - Rama de trabajo sugerida: `HU-018-dev`
 
 ## 2. Objetivo de la HU
@@ -44,6 +44,16 @@ Esta HU cubre la documentacion y definicion de:
 - estrategia de uso con `docker`, variables de entorno y archivos `.env`
 
 No implica en esta HU hacer todos los cambios tecnicos de implementacion.
+
+## 6.1 Consideracion sobre repositorios separados
+La estrategia definida en esta HU es transversal al ecosistema de `FarmaExpres` y no depende de que todo el codigo viva en una sola carpeta o repositorio.
+
+Por lo tanto:
+- el backend puede implementar su parte en su propio repositorio
+- el frontend puede implementar su parte en su propio repositorio o carpeta independiente
+- la base de datos o infraestructura puede implementar su parte en su repositorio correspondiente
+
+La HU sigue siendo valida aunque la implementacion tecnica quede distribuida entre varios repositorios, porque su objetivo es definir una convencion comun por ambiente.
 
 ## 7. Regla principal de implementacion
 La estrategia recomendada no consiste en hacer que un mismo servicio escuche tres puertos al mismo tiempo.
@@ -147,6 +157,24 @@ Ejemplo conceptual:
 
 Esto simplifica la configuracion interna del microservicio y concentra el cambio en infraestructura.
 
+## 11.1 Regla para gateway y comunicacion interna
+La estrategia propuesta cambia los puertos publicados al host, pero no obliga a cambiar los puertos internos de los microservicios dentro del ambiente.
+
+Por lo tanto, cuando los servicios pertenecen al mismo `docker compose` o a la misma red interna:
+- el `api-gateway` no necesita consumir los puertos externos publicados para `dev`, `qa` o `main`
+- el `api-gateway` puede seguir consumiendo los servicios por su nombre interno y puerto interno
+
+Ejemplo:
+- desde el host, `auth-service` en `qa` puede exponerse como `9081`
+- pero internamente el gateway sigue consumiendo `auth-service:8081`
+
+Esto significa que la matriz de puertos por ambiente afecta principalmente:
+- acceso externo desde navegador o clientes
+- pruebas manuales con Postman
+- acceso a base de datos desde pgAdmin
+
+Y no necesariamente obliga a cambiar la configuracion interna del gateway si todos los servicios viven en la misma red del ambiente.
+
 ## 12. Beneficios esperados
 Implementar esta estrategia aporta:
 - separacion clara entre ambientes
@@ -174,3 +202,27 @@ La HU documenta la estrategia y deja lista la base para implementarla.
 
 ## 15. Resultado esperado
 Al aprobar esta HU, el equipo contara con una guia clara para implementar una configuracion de puertos por ambiente en `FarmaExpres`, manteniendo orden, consistencia y facilidad de despliegue para backend, frontend y base de datos.
+
+## 16. Nota de implementacion
+Si el frontend se encuentra en otra carpeta o en otro repositorio, no existe problema arquitectonico mientras respete la misma convencion de puertos por ambiente definida en esta HU.
+
+La implementacion puede quedar distribuida asi:
+- backend en su repositorio
+- frontend en su repositorio
+- base de datos e infraestructura en su repositorio o modulo propio
+
+Lo importante es que todos adopten la misma matriz de puertos y la misma separacion por ambientes `dev`, `qa` y `main`.
+
+## 17. Aclaracion sobre implementacion real
+En la implementacion tecnica del backend, los puertos publicados ya fueron parametrizados por ambiente para:
+- `api-gateway`
+- `auth-service`
+- `inventory-service`
+- `alert-service`
+- `postgres`
+
+Sin embargo, la comunicacion interna entre contenedores sigue usando:
+- nombres de servicio estables
+- puertos internos estables
+
+Esto evita complejidad innecesaria en la configuracion del gateway y mantiene la diferenciacion de ambientes en el nivel correcto: exposicion externa, nombre del proyecto Docker y volumenes por ambiente.
