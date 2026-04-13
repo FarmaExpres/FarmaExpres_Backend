@@ -1,0 +1,43 @@
+databaseChangeLog:
+  - changeSet:
+      id: inventory-001-create-product-table
+      author: System
+      comment: Crea la tabla base de productos.
+      changes:
+        - sqlFile:
+            path: 001_create_product_table.sql
+            relativeToChangelogFile: true
+            stripComments: false
+      rollback:
+        - sqlFile:
+            path: ../../../05_rollbacks/01_ddl/00_tables/001_create_product_table.rollback.sql
+            relativeToChangelogFile: true
+            stripComments: false
+  - changeSet:
+      id: inventory-002-create-batch-table
+      author: System
+      comment: Crea la tabla de lotes.
+      changes:
+        - sqlFile:
+            path: 002_create_batch_table.sql
+            relativeToChangelogFile: true
+            stripComments: false
+      rollback:
+        - sqlFile:
+            path: ../../../05_rollbacks/01_ddl/00_tables/002_create_batch_table.rollback.sql
+            relativeToChangelogFile: true
+            stripComments: false
+  - changeSet:
+      id: inventory-003-create-motion-table
+      author: System
+      comment: Crea la tabla de movimientos.
+      changes:
+        - sqlFile:
+            path: 003_create_motion_table.sql
+            relativeToChangelogFile: true
+            stripComments: false
+      rollback:
+        - sqlFile:
+            path: ../../../05_rollbacks/01_ddl/00_tables/003_create_motion_table.rollback.sql
+            relativeToChangelogFile: true
+            stripComments: false

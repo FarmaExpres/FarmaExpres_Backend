@@ -9,17 +9,50 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database/bootstrap.sql:/docker-entrypoint-initdb.d/bootstrap.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 30s
       timeout: 10s
       retries: 5
 
+  liquibase-auth:
+    image: liquibase/liquibase:4.31
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./database:/workspace/database
+    working_dir: /workspace/database/auth
+    command:
+      - --search-path=/workspace/database/auth
+      - --changeLogFile=changelog-master.yaml
+      - --url=jdbc:postgresql://postgres:5432/farmaexpres_users
+      - --username=postgres
+      - --password=1234
+      - update
+
+  liquibase-inventory:
+    image: liquibase/liquibase:4.31
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./database:/workspace/database
+    working_dir: /workspace/database/inventory
+    command:
+      - --search-path=/workspace/database/inventory
+      - --changeLogFile=changelog-master.yaml
+      - --url=jdbc:postgresql://postgres:5432/farmaexpres_inventory
+      - --username=postgres
+      - --password=1234
+      - update
+
   auth-service:
     build: ./auth-service
     depends_on:
-      - postgres
+      liquibase-auth:
+        condition: service_completed_successfully
     ports:
       - "8081:8081"
     environment:
@@ -36,7 +69,8 @@ services:
   inventory-service:
     build: ./inventory-service
     depends_on:
-      - postgres
+      liquibase-inventory:
+        condition: service_completed_successfully
     ports:
       - "8082:8082"
     environment:
@@ -53,7 +87,8 @@ services:
   alert-service:
     build: ./alert-service
     depends_on:
-      - postgres
+      liquibase-inventory:
+        condition: service_completed_successfully
     ports:
       - "8083:8083"
     environment:

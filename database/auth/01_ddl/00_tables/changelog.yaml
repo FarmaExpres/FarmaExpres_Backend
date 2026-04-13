@@ -1,0 +1,43 @@
+databaseChangeLog:
+  - changeSet:
+      id: auth-001-create-role-table
+      author: System
+      comment: Crea la tabla base de roles.
+      changes:
+        - sqlFile:
+            path: 001_create_role_table.sql
+            relativeToChangelogFile: true
+            stripComments: false
+      rollback:
+        - sqlFile:
+            path: ../../../05_rollbacks/01_ddl/00_tables/001_create_role_table.rollback.sql
+            relativeToChangelogFile: true
+            stripComments: false
+  - changeSet:
+      id: auth-002-create-users-table
+      author: System
+      comment: Crea la tabla base de usuarios.
+      changes:
+        - sqlFile:
+            path: 002_create_users_table.sql
+            relativeToChangelogFile: true
+            stripComments: false
+      rollback:
+        - sqlFile:
+            path: ../../../05_rollbacks/01_ddl/00_tables/002_create_users_table.rollback.sql
+            relativeToChangelogFile: true
+            stripComments: false
+  - changeSet:
+      id: auth-003-create-binnacle-table
+      author: System
+      comment: Crea la tabla de bitacora.
+      changes:
+        - sqlFile:
+            path: 003_create_binnacle_table.sql
+            relativeToChangelogFile: true
+            stripComments: false
+      rollback:
+        - sqlFile:
+            path: ../../../05_rollbacks/01_ddl/00_tables/003_create_binnacle_table.rollback.sql
+            relativeToChangelogFile: true
+            stripComments: false
