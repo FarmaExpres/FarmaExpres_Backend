@@ -1,0 +1,27 @@
+{
+  "name": "alert-service",
+  "version": "1.0.0",
+  "description": "Microservicio de alertas para FarmaExpres",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "node tests/status.test.js && node tests/dateUtils.test.js && node tests/lowStockAlerts.test.js && node tests/expiredAlerts.test.js && node tests/outOfStockAlerts.test.js && node tests/expiringSoonAlerts.test.js && node tests/expiring16To30DaysAlerts.test.js && node tests/expiring31To60DaysAlerts.test.js && node tests/allAlerts.test.js && node tests/expiringProductsReport.test.js"
+  },
+  "keywords": [
+    "farmaexpres",
+    "alerts",
+    "microservice",
+    "express"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}

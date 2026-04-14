@@ -1,0 +1,29 @@
+databaseChangeLog:
+  - changeSet:
+      id: auth-101-seed-roles
+      author: System
+      comment: Inserta los roles base del sistema.
+      changes:
+        - sqlFile:
+            path: 001_seed_roles.sql
+            relativeToChangelogFile: true
+            stripComments: false
+      rollback:
+        - sqlFile:
+            path: ../../../05_rollbacks/02_dml/00_seed/001_seed_roles.rollback.sql
+            relativeToChangelogFile: true
+            stripComments: false
+  - changeSet:
+      id: auth-102-seed-users
+      author: System
+      comment: Inserta los usuarios base del entorno local.
+      changes:
+        - sqlFile:
+            path: 002_seed_users.sql
+            relativeToChangelogFile: true
+            stripComments: false
+      rollback:
+        - sqlFile:
+            path: ../../../05_rollbacks/02_dml/00_seed/002_seed_users.rollback.sql
+            relativeToChangelogFile: true
+            stripComments: false
