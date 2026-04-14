@@ -1,0 +1,6 @@
+CREATE TABLE binnacle (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    action VARCHAR(255) NOT NULL,
+    date_time TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

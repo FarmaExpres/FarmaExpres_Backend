@@ -1,0 +1,81 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          globalcors:
+            add-to-simple-url-handler-mapping: true
+            cors-configurations:
+              '[/**]':
+                allowedOriginPatterns:
+                  - "http://localhost:*"
+                  - "http://127.0.0.1:*"
+                allowedMethods:
+                  - GET
+                  - POST
+                  - PUT
+                  - PATCH
+                  - DELETE
+                  - OPTIONS
+                allowedHeaders:
+                  - "*"
+                exposedHeaders:
+                  - Authorization
+                allowCredentials: true
+          routes:
+            - id: auth-login-route
+              uri: http://auth-service:8081
+              predicates:
+                - Path=/api/auth/**
+
+            - id: users-route
+              uri: http://auth-service:8081
+              predicates:
+                - Path=/api/users,/api/users/**
+
+            - id: binnacle-route
+              uri: http://auth-service:8081
+              predicates:
+                - Path=/api/binnacle,/api/binnacle/**
+
+            - id: products-route
+              uri: http://inventory-service:8082
+              predicates:
+                - Path=/api/products,/api/products/**
+
+            - id: movements-route
+              uri: http://inventory-service:8082
+              predicates:
+                - Path=/api/movements,/api/movements/**
+
+            - id: alerts-route
+              uri: http://alert-service:8083
+              predicates:
+                - Path=/api/alerts,/api/alerts/**
+
+            - id: alerts-batch-reports-route
+              uri: http://alert-service:8083
+              predicates:
+                - Path=/api/reports/alerts-batches,/api/reports/alerts-batches/**
+
+            - id: reports-route
+              uri: http://inventory-service:8082
+              predicates:
+                - Path=/api/reports,/api/reports/**
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway: INFO
