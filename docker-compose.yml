@@ -1,12 +1,13 @@
+name: ${COMPOSE_PROJECT_NAME:-farmaexpres-backend}
+
 services:
   postgres:
     image: postgres:16
-    container_name: farmaexpres_postgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1234
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-1234}
     ports:
-      - "5433:5432"
+      - "${POSTGRES_PORT:-5433}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/bootstrap.sql:/docker-entrypoint-initdb.d/bootstrap.sql
@@ -28,8 +29,8 @@ services:
       - --search-path=/workspace/database/auth
       - --changeLogFile=changelog-master.yaml
       - --url=jdbc:postgresql://postgres:5432/farmaexpres_users
-      - --username=postgres
-      - --password=1234
+      - --username=${POSTGRES_USER:-postgres}
+      - --password=${POSTGRES_PASSWORD:-1234}
       - update
 
   liquibase-inventory:
@@ -44,8 +45,8 @@ services:
       - --search-path=/workspace/database/inventory
       - --changeLogFile=changelog-master.yaml
       - --url=jdbc:postgresql://postgres:5432/farmaexpres_inventory
-      - --username=postgres
-      - --password=1234
+      - --username=${POSTGRES_USER:-postgres}
+      - --password=${POSTGRES_PASSWORD:-1234}
       - update
 
   auth-service:
@@ -54,11 +55,11 @@ services:
       liquibase-auth:
         condition: service_completed_successfully
     ports:
-      - "8081:8081"
+      - "${AUTH_PORT:-8081}:8081"
     environment:
       DB_URL: jdbc:postgresql://postgres:5432/farmaexpres_users
-      DB_USERNAME: postgres
-      DB_PASSWORD: 1234
+      DB_USERNAME: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-1234}
       JWT_SECRET: mi_clave_secreta_larga
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
@@ -72,11 +73,11 @@ services:
       liquibase-inventory:
         condition: service_completed_successfully
     ports:
-      - "8082:8082"
+      - "${INVENTORY_PORT:-8082}:8082"
     environment:
       DB_URL: jdbc:postgresql://postgres:5432/farmaexpres_inventory
-      DB_USERNAME: postgres
-      DB_PASSWORD: 1234
+      DB_USERNAME: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-1234}
       JWT_SECRET: mi_clave_secreta_larga
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
@@ -90,7 +91,7 @@ services:
       liquibase-inventory:
         condition: service_completed_successfully
     ports:
-      - "8083:8083"
+      - "${ALERT_PORT:-8083}:8083"
     environment:
       PORT: 8083
       SERVICE_NAME: FarmaExpres_Micro_Alert
@@ -99,8 +100,8 @@ services:
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: farmaexpres_inventory
-      DB_USER: postgres
-      DB_PASSWORD: 1234
+      DB_USER: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-1234}
       DB_SSL: false
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8083/status"]
@@ -115,7 +116,7 @@ services:
       - inventory-service
       - alert-service
     ports:
-      - "8080:8080"
+      - "${GATEWAY_PORT:-8080}:8080"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s
