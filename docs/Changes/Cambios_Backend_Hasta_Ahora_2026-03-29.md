@@ -59,7 +59,7 @@ Se creó inicialización automática e idempotente al arrancar el servicio:
 - Usuarios base:
   - Nicolas Tello (`temenico5@gmail.com`) - `ADMIN`
   - Jose Leonardo Vargas (`leonardojv@gmail.com`) - `ADMIN`
-  - Jersson Fabian Buitrago (`jerssson@gmail.com`) - `AUDITOR`
+  - Jersson Fabian Buitrago (`jersson@gmail.com`) - `AUDITOR`
   - Marlon Romero (`marlon@gmail.com`) - `FARMACEUTICO`
 
 Archivo agregado:

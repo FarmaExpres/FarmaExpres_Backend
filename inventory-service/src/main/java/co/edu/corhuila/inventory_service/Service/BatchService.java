@@ -33,6 +33,10 @@ public class BatchService {
 
     public List<BatchResponse> listBatchesByProduct(Long productId) {
         Product product = findProductOrThrow(productId);
+        if (!isProductOperable(product)) {
+            return List.of();
+        }
+
         refreshBatchStatuses(productId);
         return batchRepository.findByProductIdOrderByExpirationDateAsc(product.getId())
                 .stream()
@@ -43,9 +47,7 @@ public class BatchService {
     @Transactional
     public BatchResponse createBatch(Long productId, CreateBatchRequest request) {
         Product product = findProductOrThrow(productId);
-        if (!product.isActive()) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "No se pueden crear lotes en productos retirados");
-        }
+        validateProductIsOperable(product, "No se pueden crear lotes sobre un medicamento inactivo.");
 
         validateCreateBatchRequest(request);
 
@@ -108,12 +110,7 @@ public class BatchService {
         if (product == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Producto requerido");
         }
-        if (!product.isActive()) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNPROCESSABLE_ENTITY,
-                    "No se pueden registrar entradas para productos retirados"
-            );
-        }
+        validateProductIsOperable(product, "No se pueden registrar movimientos sobre un medicamento inactivo.");
         if (quantity == null || quantity <= 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "quantity debe ser mayor a 0");
         }
@@ -200,6 +197,22 @@ public class BatchService {
     public Product findProductOrThrow(Long productId) {
         return productRepository.findById(productId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado"));
+    }
+
+    public Product findOperableProductOrThrow(Long productId, String message) {
+        Product product = findProductOrThrow(productId);
+        validateProductIsOperable(product, message);
+        return product;
+    }
+
+    public void validateProductIsOperable(Product product, String message) {
+        if (!isProductOperable(product)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, message);
+        }
+    }
+
+    public boolean isProductOperable(Product product) {
+        return product != null && Boolean.TRUE.equals(product.getActive());
     }
 
     @Transactional
@@ -320,6 +333,14 @@ public class BatchService {
     }
 
     private void recalculateProductStockFromActiveBatches(Product product, boolean persistProduct) {
+        if (!isProductOperable(product)) {
+            product.setStock(0);
+            if (persistProduct) {
+                productRepository.save(product);
+            }
+            return;
+        }
+
         List<Batch> batches = batchRepository.findByProductIdOrderByExpirationDateAsc(product.getId());
         LocalDate today = LocalDate.now();
 

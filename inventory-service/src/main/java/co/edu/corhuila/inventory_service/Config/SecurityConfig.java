@@ -52,6 +52,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/products/fefo-snapshot")
                         .hasAnyRole("ADMIN", "FARMACEUTICO")
 
+                        // Administrative product management: includes inactive products
+                        .requestMatchers(HttpMethod.GET, "/api/products/all")
+                        .hasAnyRole("ADMIN", "AUDITOR")
+
                         // Products: ADMIN, PHARMACIST and AUDITOR can view
                         .requestMatchers(HttpMethod.GET, "/api/products/**")
                         .hasAnyRole("ADMIN", "FARMACEUTICO", "AUDITOR")
