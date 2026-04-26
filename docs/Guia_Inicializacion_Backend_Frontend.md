@@ -49,7 +49,7 @@ Al arrancar por primera vez se crean automaticamente:
 
 - Usuarios adicionales:
   - Email: `leonardojv@gmail.com` | Password: `admin123` | Rol: `ADMIN`
-  - Email: `jerssson@gmail.com` | Password: `admin123` | Rol: `AUDITOR`
+  - Email: `jersson@gmail.com` | Password: `admin123` | Rol: `AUDITOR`
   - Email: `marlon@gmail.com` | Password: `admin123` | Rol: `FARMACEUTICO`
 
 - 10 medicamentos base:
