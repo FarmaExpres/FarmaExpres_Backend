@@ -151,13 +151,10 @@ public class MotionService {
     @Transactional
     public InventoryEntryResponse registerInventoryEntry(InventoryEntryRequest request) {
         validateInventoryEntryRequest(request);
-        Product product = batchService.findProductOrThrow(request.getProductId());
-        if (!product.isActive()) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNPROCESSABLE_ENTITY,
-                    "No se pueden registrar entradas para productos retirados"
-            );
-        }
+        Product product = batchService.findOperableProductOrThrow(
+                request.getProductId(),
+                "No se pueden registrar movimientos sobre un medicamento inactivo."
+        );
 
         Batch createdBatch = batchService.createBatchForInventoryEntry(
                 product,
@@ -198,13 +195,10 @@ public class MotionService {
     @Transactional
     public MovementExecutionResponse registerInventoryExit(InventoryExitRequest request) {
         validateInventoryExitRequest(request);
-        Product product = batchService.findProductOrThrow(request.getProductId());
-        if (!product.isActive()) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNPROCESSABLE_ENTITY,
-                    "No se pueden registrar salidas para productos retirados"
-            );
-        }
+        Product product = batchService.findOperableProductOrThrow(
+                request.getProductId(),
+                "No se pueden registrar salidas sobre un medicamento inactivo."
+        );
 
         batchService.refreshBatchStatuses(product.getId());
         List<Batch> consumableBatches = batchRepository.findConsumableBatchesByProductIdOrderByCreatedAtAsc(
@@ -286,7 +280,10 @@ public class MotionService {
     @Transactional
     public MovementExecutionResponse createMovement(MovementRequest request) {
         validateMovementRequest(request);
-        Product product = batchService.findProductOrThrow(request.getProductId());
+        Product product = batchService.findOperableProductOrThrow(
+                request.getProductId(),
+                "No se pueden registrar movimientos sobre un medicamento inactivo."
+        );
         MovementType movementType = parseMovementType(request.getType());
 
         if (movementType == MovementType.Exit && request.getBatchId() == null) {
@@ -351,7 +348,10 @@ public class MotionService {
     @Transactional
     public MovementExecutionResponse consumeFefo(FefoConsumeRequest request) {
         validateFefoRequest(request);
-        Product product = batchService.findProductOrThrow(request.getProductId());
+        Product product = batchService.findOperableProductOrThrow(
+                request.getProductId(),
+                "No se pueden registrar salidas sobre un medicamento inactivo."
+        );
         batchService.refreshBatchStatuses(product.getId());
 
         List<Batch> consumableBatches = batchRepository.findConsumableBatchesByProductId(
