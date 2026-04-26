@@ -17,6 +17,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -28,6 +29,9 @@ class ProductServiceTest {
 
     @Mock
     private MotionRepository motionRepository;
+
+    @Mock
+    private BatchService batchService;
 
     @InjectMocks
     private ProductService productService;
@@ -126,6 +130,50 @@ class ProductServiceTest {
 
         assertEquals(List.of(), response);
         verify(productRepository).findByActiveTrue();
+    }
+
+    @Test
+    void shouldReturnAllProductsForAdministrationIncludingInactiveProducts() {
+        Product activeProduct = new Product(
+                "Ibuprofeno 400mg",
+                "IBU-001",
+                80,
+                new BigDecimal("3200"),
+                LocalDate.of(2027, 6, 30),
+                15
+        );
+        activeProduct.setId(1L);
+
+        Product inactiveProduct = new Product(
+                "Vitamina C 1 g",
+                "VIC-001",
+                25,
+                new BigDecimal("2500"),
+                LocalDate.of(2027, 8, 10),
+                10
+        );
+        inactiveProduct.setId(7L);
+        inactiveProduct.setActive(false);
+
+        when(productRepository.findAll())
+                .thenReturn(List.of(activeProduct, inactiveProduct));
+        doAnswer(invocation -> {
+            Product product = invocation.getArgument(0);
+            if (!Boolean.TRUE.equals(product.getActive())) {
+                product.setStock(0);
+            }
+            return null;
+        }).when(batchService).refreshProductStockSnapshot(org.mockito.ArgumentMatchers.any(Product.class));
+
+        List<Product> response = productService.listAllProductsForAdministration();
+
+        assertEquals(2, response.size());
+        assertEquals("IBU-001", response.get(0).getCode());
+        assertEquals(true, response.get(0).getActive());
+        assertEquals("VIC-001", response.get(1).getCode());
+        assertEquals(false, response.get(1).getActive());
+        assertEquals(0, response.get(1).getStock());
+        verify(productRepository).findAll();
     }
 
     @Test
