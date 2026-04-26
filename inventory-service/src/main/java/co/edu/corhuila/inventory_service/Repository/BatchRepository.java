@@ -27,6 +27,7 @@ public interface BatchRepository extends JpaRepository<Batch, Long> {
             SELECT b
             FROM Batch b
             WHERE b.product.id = :productId
+              AND b.product.active = true
               AND b.status IN :statuses
               AND b.availableStock > 0
               AND b.expirationDate >= CURRENT_DATE
@@ -42,6 +43,7 @@ public interface BatchRepository extends JpaRepository<Batch, Long> {
             SELECT b
             FROM Batch b
             WHERE b.product.id = :productId
+              AND b.product.active = true
               AND b.status IN :statuses
               AND b.availableStock > 0
               AND b.expirationDate >= CURRENT_DATE
@@ -58,7 +60,10 @@ public interface BatchRepository extends JpaRepository<Batch, Long> {
                 b.available_stock,
                 b.id AS batch_id
               FROM batch b
+              JOIN product p
+                ON p.id = b.product_id
               WHERE b.status = 'ACTIVE'
+                AND p.asset = TRUE
                 AND b.available_stock > 0
                 AND b.expiration_date::date >= (CURRENT_TIMESTAMP AT TIME ZONE 'America/Bogota')::date
             ),

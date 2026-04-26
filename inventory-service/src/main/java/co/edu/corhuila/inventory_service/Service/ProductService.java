@@ -275,7 +275,17 @@ public class ProductService {
     }
 
     public List<Product> listProducts() {
-        return productRepository.findAll();
+        return productRepository.findByActiveTrue()
+                .stream()
+                .peek(batchService::refreshProductStockSnapshot)
+                .toList();
+    }
+
+    public List<Product> listAllProductsForAdministration() {
+        return productRepository.findAll()
+                .stream()
+                .peek(batchService::refreshProductStockSnapshot)
+                .toList();
     }
 
     public List<Product> listActiveProducts() {
