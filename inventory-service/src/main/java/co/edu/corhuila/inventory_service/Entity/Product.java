@@ -276,7 +276,7 @@ public class Product {
     }
 
     public boolean isActive() {
-    return active;
+    return Boolean.TRUE.equals(active);
     }
 
     public Integer getMinimumStock() {
