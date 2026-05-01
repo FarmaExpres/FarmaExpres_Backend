@@ -20,7 +20,8 @@ public class SecurityConfig {
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers(HttpMethod.OPTIONS).permitAll()
                         .pathMatchers("/status", "/actuator/health", "/actuator/info").permitAll()
-                        .pathMatchers("/api/**").permitAll()
+                        .pathMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/refresh", "/api/auth/logout").permitAll()
+                        .pathMatchers("/api/**").authenticated()
                         .anyExchange().authenticated()
                 )
                 .build();

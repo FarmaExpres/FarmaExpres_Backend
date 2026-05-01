@@ -1,15 +1,13 @@
-package co.edu.corhuila.inventory_service.Service;
+package co.edu.corhuila.api_gateway.Service;
 
-
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
-import java.security.Key;
 import java.nio.charset.StandardCharsets;
-
+import java.security.Key;
 
 @Service
 public class JwtService {
@@ -20,7 +18,7 @@ public class JwtService {
         this.secret = secret;
     }
 
-    public Claims extraerClaims(String token) {
+    public Claims extractClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
                 .build()
@@ -31,5 +29,4 @@ public class JwtService {
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
-
 }
