@@ -1,15 +1,40 @@
+const crypto = require("crypto");
+
 const REPORT_ALLOWED_ROLES = new Set(["ADMIN", "AUDITOR", "FARMACEUTICO"]);
 
-function decodeJwtPayload(token) {
+function base64UrlDecode(value) {
+  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
+  return Buffer.from(padded, "base64");
+}
+
+function verifyJwt(token) {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error("JWT_SECRET is not configured");
+  }
+
   const parts = token.split(".");
-  if (parts.length < 2 || !parts[1]) {
+  if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) {
     throw new Error("Malformed JWT");
   }
 
-  const normalized = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-  const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
-  const decoded = Buffer.from(padded, "base64").toString("utf8");
-  return JSON.parse(decoded);
+  const signedContent = `${parts[0]}.${parts[1]}`;
+  const expectedSignature = crypto
+    .createHmac("sha256", secret)
+    .update(signedContent)
+    .digest("base64url");
+
+  const expectedBuffer = Buffer.from(expectedSignature);
+  const actualBuffer = Buffer.from(parts[2]);
+  if (
+    expectedBuffer.length !== actualBuffer.length ||
+    !crypto.timingSafeEqual(expectedBuffer, actualBuffer)
+  ) {
+    throw new Error("Invalid JWT signature");
+  }
+
+  return JSON.parse(base64UrlDecode(parts[1]).toString("utf8"));
 }
 
 function requireReportsRole(request, response, next) {
@@ -20,7 +45,7 @@ function requireReportsRole(request, response, next) {
 
   try {
     const token = authHeader.substring(7).trim();
-    const payload = decodeJwtPayload(token);
+    const payload = verifyJwt(token);
     const role = String(payload.rol || payload.role || "").toUpperCase();
 
     const exp = Number(payload.exp);

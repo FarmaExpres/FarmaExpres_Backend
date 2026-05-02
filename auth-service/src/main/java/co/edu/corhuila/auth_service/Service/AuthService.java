@@ -26,16 +26,19 @@ public class AuthService {
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final BinnacleRepository binnacleRepository;
+    private final RefreshTokenService refreshTokenService;
 
 
     public AuthService(UserRepository userRepository,
                        BCryptPasswordEncoder passwordEncoder,
                        JwtService jwtService,
-                       BinnacleRepository binnacleRepository) {
+                       BinnacleRepository binnacleRepository,
+                       RefreshTokenService refreshTokenService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.binnacleRepository = binnacleRepository;
+        this.refreshTokenService = refreshTokenService;
 
     }
 
@@ -80,14 +83,48 @@ public class AuthService {
                 user.getName(),
                 user.getId()
         );
+        String refreshToken = refreshTokenService.createRefreshToken(user);
 
         return new LoginResponseDto(
                 token,
+                refreshToken,
                 "Bearer",
                 user.getEmail(),
                 user.getRole().getName(),
                 user.getName()
         );
+    }
+
+    public LoginResponseDto refresh(String refreshToken) {
+        RefreshTokenService.RefreshTokenIssue issue = refreshTokenService.rotateRefreshToken(refreshToken);
+        User user = issue.user();
+
+        if (user.getState() != UserStatus.Asset) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Usuario no activo"
+            );
+        }
+
+        String accessToken = jwtService.generateToken(
+                user.getEmail(),
+                user.getRole().getName(),
+                user.getName(),
+                user.getId()
+        );
+
+        return new LoginResponseDto(
+                accessToken,
+                issue.refreshToken(),
+                "Bearer",
+                user.getEmail(),
+                user.getRole().getName(),
+                user.getName()
+        );
+    }
+
+    public void logout(String refreshToken) {
+        refreshTokenService.revokeRefreshToken(refreshToken);
     }
 
 

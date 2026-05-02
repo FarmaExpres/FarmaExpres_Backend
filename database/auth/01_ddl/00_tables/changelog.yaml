@@ -41,3 +41,17 @@ databaseChangeLog:
             path: ../../../05_rollbacks/01_ddl/00_tables/003_create_binnacle_table.rollback.sql
             relativeToChangelogFile: true
             stripComments: false
+  - changeSet:
+      id: auth-004-create-refresh-token-table
+      author: System
+      comment: Crea la tabla para refresh tokens de sesion.
+      changes:
+        - sqlFile:
+            path: 004_create_refresh_token_table.sql
+            relativeToChangelogFile: true
+            stripComments: false
+      rollback:
+        - sqlFile:
+            path: ../../../05_rollbacks/01_ddl/00_tables/004_create_refresh_token_table.rollback.sql
+            relativeToChangelogFile: true
+            stripComments: false
