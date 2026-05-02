@@ -31,6 +31,8 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers("/status").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
+                        .requestMatchers("/api/auth/refresh").permitAll()
+                        .requestMatchers("/api/auth/logout").permitAll()
 
                         // CAMBIO DE CONTRASEÑA: primero la ruta específica
                         .requestMatchers(HttpMethod.PUT, "/api/users/*/password")

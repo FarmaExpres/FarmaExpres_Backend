@@ -6,6 +6,8 @@ import lombok.Getter;
 public class LoginResponseDto {
 
     private String token;
+    private String accessToken;
+    private String refreshToken;
     private String type;
     private String email;
     private String role;
@@ -13,8 +15,10 @@ public class LoginResponseDto {
 
     public LoginResponseDto() {}
 
-    public LoginResponseDto(String token, String type, String email, String role, String name) {
-        this.token = token;
+    public LoginResponseDto(String accessToken, String refreshToken, String type, String email, String role, String name) {
+        this.token = accessToken;
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
         this.type = type;
         this.email = email;
         this.role = role;
@@ -23,6 +27,14 @@ public class LoginResponseDto {
 
     public void setToken(String token) {
         this.token = token;
+    }
+
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
     }
 
     public void setType(String type) {

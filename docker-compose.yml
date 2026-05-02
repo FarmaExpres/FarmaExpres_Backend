@@ -60,7 +60,9 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/farmaexpres_users
       DB_USERNAME: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-1234}
-      JWT_SECRET: mi_clave_secreta_larga
+      JWT_SECRET: ${JWT_SECRET:-mi_clave_super_secreta_ultra_segura_de_256_bits_minimo_1234567890}
+      JWT_ACCESS_EXPIRATION_MS: ${JWT_ACCESS_EXPIRATION_MS:-900000}
+      JWT_REFRESH_EXPIRATION_MS: ${JWT_REFRESH_EXPIRATION_MS:-86400000}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
       interval: 30s
@@ -78,7 +80,7 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/farmaexpres_inventory
       DB_USERNAME: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-1234}
-      JWT_SECRET: mi_clave_secreta_larga
+      JWT_SECRET: ${JWT_SECRET:-mi_clave_super_secreta_ultra_segura_de_256_bits_minimo_1234567890}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
       interval: 30s
@@ -103,6 +105,7 @@ services:
       DB_USER: ${POSTGRES_USER:-postgres}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-1234}
       DB_SSL: false
+      JWT_SECRET: ${JWT_SECRET:-mi_clave_super_secreta_ultra_segura_de_256_bits_minimo_1234567890}
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8083/status"]
       interval: 30s
@@ -117,6 +120,8 @@ services:
       - alert-service
     ports:
       - "${GATEWAY_PORT:-8080}:8080"
+    environment:
+      JWT_SECRET: ${JWT_SECRET:-mi_clave_super_secreta_ultra_segura_de_256_bits_minimo_1234567890}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s
