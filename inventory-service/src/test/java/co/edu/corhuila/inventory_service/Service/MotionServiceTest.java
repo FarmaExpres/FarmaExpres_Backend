@@ -27,7 +27,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Collection;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -46,6 +45,9 @@ class MotionServiceTest {
 
     @Mock
     private BatchService batchService;
+
+    @Mock
+    private InventoryConcurrencyGuard inventoryConcurrencyGuard;
 
     @InjectMocks
     private MotionService motionService;
@@ -76,7 +78,7 @@ class MotionServiceTest {
                 List.of(new SimpleGrantedAuthority("ROLE_FARMACEUTICO"))
         ));
 
-        when(batchService.findOperableProductOrThrow(
+        when(inventoryConcurrencyGuard.lockOperableProduct(
                 8L,
                 "No se pueden registrar movimientos sobre un medicamento inactivo."
         )).thenReturn(product);
@@ -92,7 +94,7 @@ class MotionServiceTest {
         assertEquals(1, response.getAllocations().size());
         assertEquals(31L, response.getAllocations().get(0).getBatchId());
         assertEquals("LOT-MET001-20260405-001", response.getAllocations().get(0).getBatchCode());
-        verify(batchService).findOperableProductOrThrow(
+        verify(inventoryConcurrencyGuard).lockOperableProduct(
                 8L,
                 "No se pueden registrar movimientos sobre un medicamento inactivo."
         );
@@ -137,14 +139,12 @@ class MotionServiceTest {
                 List.of(new SimpleGrantedAuthority("ROLE_FARMACEUTICO"))
         ));
 
-        when(batchService.findOperableProductOrThrow(
+        when(inventoryConcurrencyGuard.lockOperableProduct(
                 8L,
                 "No se pueden registrar salidas sobre un medicamento inactivo."
         )).thenReturn(product);
-        when(batchRepository.findConsumableBatchesByProductIdOrderByCreatedAtAsc(
-                org.mockito.ArgumentMatchers.eq(8L),
-                org.mockito.ArgumentMatchers.<Collection<BatchStatus>>any()
-        )).thenReturn(List.of(firstBatch, secondBatch));
+        when(inventoryConcurrencyGuard.lockConsumableBatchesByRegistrationOrder(8L))
+                .thenReturn(List.of(firstBatch, secondBatch));
 
         MovementExecutionResponse response = motionService.registerInventoryExit(request);
 
@@ -161,6 +161,7 @@ class MotionServiceTest {
         assertEquals(0, firstBatch.getAvailableStock());
         assertEquals(5, secondBatch.getAvailableStock());
         verify(batchService).refreshBatchStatuses(8L);
+        verify(inventoryConcurrencyGuard).lockConsumableBatchesByRegistrationOrder(8L);
         verify(batchService).syncProductStock(product);
         verify(motionRepository, org.mockito.Mockito.times(2)).save(org.mockito.ArgumentMatchers.any(Motion.class));
         SecurityContextHolder.clearContext();
@@ -206,14 +207,12 @@ class MotionServiceTest {
         secondBatch.setAvailableStock(20);
         secondBatch.setStatus(BatchStatus.ACTIVE);
 
-        when(batchService.findOperableProductOrThrow(
+        when(inventoryConcurrencyGuard.lockOperableProduct(
                 8L,
                 "No se pueden registrar salidas sobre un medicamento inactivo."
         )).thenReturn(product);
-        when(batchRepository.findConsumableBatchesByProductIdOrderByCreatedAtAsc(
-                org.mockito.ArgumentMatchers.eq(8L),
-                org.mockito.ArgumentMatchers.<Collection<BatchStatus>>any()
-        )).thenReturn(List.of(firstBatch, secondBatch));
+        when(inventoryConcurrencyGuard.lockConsumableBatchesByRegistrationOrder(8L))
+                .thenReturn(List.of(firstBatch, secondBatch));
 
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
@@ -249,7 +248,7 @@ class MotionServiceTest {
         request.setReason("Donacion");
         request.setExpirationDate(LocalDate.now().plusDays(30));
 
-        when(batchService.findOperableProductOrThrow(
+        when(inventoryConcurrencyGuard.lockOperableProduct(
                 8L,
                 "No se pueden registrar movimientos sobre un medicamento inactivo."
         )).thenThrow(new ResponseStatusException(
@@ -263,7 +262,7 @@ class MotionServiceTest {
         );
 
         assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
-        verify(batchService).findOperableProductOrThrow(
+        verify(inventoryConcurrencyGuard).lockOperableProduct(
                 8L,
                 "No se pueden registrar movimientos sobre un medicamento inactivo."
         );
@@ -276,7 +275,7 @@ class MotionServiceTest {
         request.setQuantity(10);
         request.setReason("Dispensacion");
 
-        when(batchService.findOperableProductOrThrow(
+        when(inventoryConcurrencyGuard.lockOperableProduct(
                 8L,
                 "No se pueden registrar salidas sobre un medicamento inactivo."
         )).thenThrow(new ResponseStatusException(
@@ -290,7 +289,7 @@ class MotionServiceTest {
         );
 
         assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
-        verify(batchService).findOperableProductOrThrow(
+        verify(inventoryConcurrencyGuard).lockOperableProduct(
                 8L,
                 "No se pueden registrar salidas sobre un medicamento inactivo."
         );
