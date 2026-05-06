@@ -2,7 +2,9 @@ package co.edu.corhuila.inventory_service.Repository;
 
 import co.edu.corhuila.inventory_service.Entity.Batch;
 import co.edu.corhuila.inventory_service.Entity.BatchStatus;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.Collection;
@@ -35,9 +37,34 @@ public interface BatchRepository extends JpaRepository<Batch, Long> {
             """)
     List<Batch> findConsumableBatchesByProductIdOrderByCreatedAtAsc(Long productId, Collection<BatchStatus> statuses);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT b
+            FROM Batch b
+            WHERE b.product.id = :productId
+              AND b.product.active = true
+              AND b.status IN :statuses
+              AND b.availableStock > 0
+              AND b.expirationDate >= CURRENT_DATE
+            ORDER BY b.createdAt ASC, b.id ASC
+            """)
+    List<Batch> findConsumableBatchesByProductIdOrderByCreatedAtAscForUpdate(
+            Long productId,
+            Collection<BatchStatus> statuses
+    );
+
     boolean existsByProductIdAndBatchCodeIgnoreCase(Long productId, String batchCode);
 
     Optional<Batch> findByIdAndProductId(Long batchId, Long productId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT b
+            FROM Batch b
+            WHERE b.id = :batchId
+              AND b.product.id = :productId
+            """)
+    Optional<Batch> findByIdAndProductIdForUpdate(Long batchId, Long productId);
 
     @Query("""
             SELECT b
@@ -50,6 +77,19 @@ public interface BatchRepository extends JpaRepository<Batch, Long> {
             ORDER BY b.expirationDate ASC, b.id ASC
             """)
     List<Batch> findConsumableBatchesByProductId(Long productId, Collection<BatchStatus> statuses);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT b
+            FROM Batch b
+            WHERE b.product.id = :productId
+              AND b.product.active = true
+              AND b.status IN :statuses
+              AND b.availableStock > 0
+              AND b.expirationDate >= CURRENT_DATE
+            ORDER BY b.expirationDate ASC, b.id ASC
+            """)
+    List<Batch> findConsumableBatchesByProductIdForUpdate(Long productId, Collection<BatchStatus> statuses);
 
     @Query(value = """
             WITH consumable_batches AS (
