@@ -58,15 +58,18 @@ public class MotionService {
     private final MotionRepository motionRepository;
     private final BatchRepository batchRepository;
     private final BatchService batchService;
+    private final InventoryConcurrencyGuard inventoryConcurrencyGuard;
 
     public MotionService(
             MotionRepository motionRepository,
             BatchRepository batchRepository,
-            BatchService batchService
+            BatchService batchService,
+            InventoryConcurrencyGuard inventoryConcurrencyGuard
     ) {
         this.motionRepository = motionRepository;
         this.batchRepository = batchRepository;
         this.batchService = batchService;
+        this.inventoryConcurrencyGuard = inventoryConcurrencyGuard;
     }
 
     public List<MotionResponse> listMotion() {
@@ -151,7 +154,7 @@ public class MotionService {
     @Transactional
     public InventoryEntryResponse registerInventoryEntry(InventoryEntryRequest request) {
         validateInventoryEntryRequest(request);
-        Product product = batchService.findOperableProductOrThrow(
+        Product product = inventoryConcurrencyGuard.lockOperableProduct(
                 request.getProductId(),
                 "No se pueden registrar movimientos sobre un medicamento inactivo."
         );
@@ -195,15 +198,14 @@ public class MotionService {
     @Transactional
     public MovementExecutionResponse registerInventoryExit(InventoryExitRequest request) {
         validateInventoryExitRequest(request);
-        Product product = batchService.findOperableProductOrThrow(
+        Product product = inventoryConcurrencyGuard.lockOperableProduct(
                 request.getProductId(),
                 "No se pueden registrar salidas sobre un medicamento inactivo."
         );
 
         batchService.refreshBatchStatuses(product.getId());
-        List<Batch> consumableBatches = batchRepository.findConsumableBatchesByProductIdOrderByCreatedAtAsc(
-                product.getId(),
-                List.of(BatchStatus.ACTIVE)
+        List<Batch> consumableBatches = inventoryConcurrencyGuard.lockConsumableBatchesByRegistrationOrder(
+                product.getId()
         );
 
         int totalAvailable = consumableBatches.stream()
@@ -280,7 +282,7 @@ public class MotionService {
     @Transactional
     public MovementExecutionResponse createMovement(MovementRequest request) {
         validateMovementRequest(request);
-        Product product = batchService.findOperableProductOrThrow(
+        Product product = inventoryConcurrencyGuard.lockOperableProduct(
                 request.getProductId(),
                 "No se pueden registrar movimientos sobre un medicamento inactivo."
         );
@@ -298,7 +300,7 @@ public class MotionService {
             );
         }
 
-        Batch batch = batchService.findBatchOrThrow(product.getId(), request.getBatchId());
+        Batch batch = inventoryConcurrencyGuard.lockBatchForProduct(product.getId(), request.getBatchId());
         if (batch.getStatus() == BatchStatus.RETIRED) {
             throw new ResponseStatusException(
                     HttpStatus.UNPROCESSABLE_ENTITY,
@@ -348,16 +350,13 @@ public class MotionService {
     @Transactional
     public MovementExecutionResponse consumeFefo(FefoConsumeRequest request) {
         validateFefoRequest(request);
-        Product product = batchService.findOperableProductOrThrow(
+        Product product = inventoryConcurrencyGuard.lockOperableProduct(
                 request.getProductId(),
                 "No se pueden registrar salidas sobre un medicamento inactivo."
         );
         batchService.refreshBatchStatuses(product.getId());
 
-        List<Batch> consumableBatches = batchRepository.findConsumableBatchesByProductId(
-                product.getId(),
-                List.of(BatchStatus.ACTIVE)
-        );
+        List<Batch> consumableBatches = inventoryConcurrencyGuard.lockConsumableBatchesByFefo(product.getId());
 
         int totalAvailable = consumableBatches.stream()
                 .map(Batch::getAvailableStock)
