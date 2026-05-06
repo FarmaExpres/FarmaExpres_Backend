@@ -1,9 +1,9 @@
 # ADR-021: Control de concurrencia para movimientos de inventario
 
-**Fecha:** 2026-05-05  
-**Estado:** Propuesto  
-**Autor:** MDRT  
-**Proyecto:** FarmaExpres  
+**Fecha:** 2026-05-05
+**Estado:** Propuesto
+**Autor:** MDRT
+**Proyecto:** FarmaExpres
 **Componente principal:** `inventory-service`
 
 ---
