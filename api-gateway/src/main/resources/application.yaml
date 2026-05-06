@@ -33,47 +33,123 @@ spring:
               uri: http://auth-service:8081
               predicates:
                 - Path=/api/auth/**
+              # Start HU-JFBM-001-dev
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: auth-service
+                    fallbackUri: forward:/fallback/auth
+              # End-HU-JFBM-001-dev
 
             - id: users-route
               uri: http://auth-service:8081
               predicates:
                 - Path=/api/users,/api/users/**
+              # Start HU-JFBM-001-dev
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: auth-service
+                    fallbackUri: forward:/fallback/auth
+              # End-HU-JFBM-001-dev
 
             - id: binnacle-route
               uri: http://auth-service:8081
               predicates:
                 - Path=/api/binnacle,/api/binnacle/**
+              # Start HU-JFBM-001-dev
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: auth-service
+                    fallbackUri: forward:/fallback/auth
+              # End-HU-JFBM-001-dev
 
             - id: products-route
               uri: http://inventory-service:8082
               predicates:
                 - Path=/api/products,/api/products/**
+              # Start HU-JFBM-001-dev
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: inventory-service
+                    fallbackUri: forward:/fallback/inventory
+              # End-HU-JFBM-001-dev
 
             - id: movements-route
               uri: http://inventory-service:8082
               predicates:
                 - Path=/api/movements,/api/movements/**
+              # Start HU-JFBM-001-dev
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: inventory-service
+                    fallbackUri: forward:/fallback/inventory
+              # End-HU-JFBM-001-dev
 
             - id: alerts-route
               uri: http://alert-service:8083
               predicates:
                 - Path=/api/alerts,/api/alerts/**
+              # Start HU-JFBM-001-dev
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: alert-service
+                    fallbackUri: forward:/fallback/alerts
+              # End-HU-JFBM-001-dev
 
             - id: alerts-batch-reports-route
               uri: http://alert-service:8083
               predicates:
                 - Path=/api/reports/alerts-batches,/api/reports/alerts-batches/**
+              # Start HU-JFBM-001-dev
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: alert-service
+                    fallbackUri: forward:/fallback/alerts
+              # End-HU-JFBM-001-dev
 
             - id: reports-route
               uri: http://inventory-service:8082
               predicates:
                 - Path=/api/reports,/api/reports/**
+              # Start HU-JFBM-001-dev
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: inventory-service
+                    fallbackUri: forward:/fallback/inventory
+              # End-HU-JFBM-001-dev
 
 management:
   endpoints:
     web:
       exposure:
         include: health,info
+
+# Start HU-JFBM-001-dev
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+    instances:
+      auth-service:
+        baseConfig: default
+      inventory-service:
+        baseConfig: default
+      alert-service:
+        baseConfig: default
+# End-HU-JFBM-001-dev
 
 jwt:
   secret: ${JWT_SECRET:mi_clave_super_secreta_ultra_segura_de_256_bits_minimo_1234567890}
