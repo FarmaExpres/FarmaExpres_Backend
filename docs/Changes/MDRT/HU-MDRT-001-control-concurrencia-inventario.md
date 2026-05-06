@@ -18,8 +18,8 @@ simultaneos.
 
 ## 3. Historia de usuario
 
-Como equipo de FarmaExpres,  
-queremos que las salidas y ajustes de inventario bloqueen el producto y los lotes involucrados,  
+Como equipo de FarmaExpres,
+queremos que las salidas y ajustes de inventario bloqueen el producto y los lotes involucrados,
 para evitar doble consumo de stock cuando varios usuarios o replicas del servicio procesan movimientos
 al mismo tiempo.
 
