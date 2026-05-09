@@ -41,3 +41,17 @@ databaseChangeLog:
             path: ../../../05_rollbacks/01_ddl/00_tables/003_create_motion_table.rollback.sql
             relativeToChangelogFile: true
             stripComments: false
+  - changeSet:
+      id: inventory-004-allow-nullable-product-expirationdate
+      author: System
+      comment: Permite que un producto sin lotes consumibles no tenga proximo vencimiento.
+      changes:
+        - sqlFile:
+            path: 004_allow_nullable_product_expirationdate.sql
+            relativeToChangelogFile: true
+            stripComments: false
+      rollback:
+        - sqlFile:
+            path: ../../../05_rollbacks/01_ddl/00_tables/004_allow_nullable_product_expirationdate.rollback.sql
+            relativeToChangelogFile: true
+            stripComments: false
