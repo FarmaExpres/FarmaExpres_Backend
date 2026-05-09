@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="620" viewBox="0 0 1100 620" role="img" aria-labelledby="title desc">
+  <title id="title">HU-JFBM-002 validacion de base de datos</title>
+  <desc id="desc">Resumen visual de la validacion PostgreSQL para la nulabilidad de product.expirationdate.</desc>
+  <rect width="1100" height="620" fill="#f8fafc"/>
+  <rect x="48" y="42" width="1004" height="536" rx="18" fill="#ffffff" stroke="#d8e2ef"/>
+  <rect x="48" y="42" width="1004" height="96" rx="18" fill="#7c3aed"/>
+  <text x="88" y="98" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#ffffff">Validacion de base de datos</text>
+  <text x="88" y="166" font-family="Segoe UI, Arial, sans-serif" font-size="19" fill="#334155">Base de datos: farmaexpres_inventory</text>
+  <text x="88" y="202" font-family="Segoe UI, Arial, sans-serif" font-size="19" fill="#334155">Columna objetivo: product.expirationdate</text>
+
+  <rect x="88" y="250" width="924" height="145" rx="12" fill="#111827"/>
+  <text x="118" y="290" font-family="Cascadia Mono, Consolas, monospace" font-size="17" fill="#d1d5db">SELECT column_name, is_nullable</text>
+  <text x="118" y="322" font-family="Cascadia Mono, Consolas, monospace" font-size="17" fill="#d1d5db">FROM information_schema.columns</text>
+  <text x="118" y="354" font-family="Cascadia Mono, Consolas, monospace" font-size="17" fill="#d1d5db">WHERE table_name = 'product'</text>
+  <text x="118" y="386" font-family="Cascadia Mono, Consolas, monospace" font-size="17" fill="#d1d5db">  AND column_name = 'expirationdate';</text>
+
+  <rect x="88" y="435" width="924" height="88" rx="12" fill="#f5f3ff" stroke="#c4b5fd"/>
+  <text x="118" y="471" font-family="Segoe UI, Arial, sans-serif" font-size="18" fill="#4c1d95">Resultado</text>
+  <text x="118" y="505" font-family="Cascadia Mono, Consolas, monospace" font-size="26" font-weight="700" fill="#5b21b6">expirationdate | YES</text>
+
+  <rect x="760" y="154" width="252" height="66" rx="14" fill="#ede9fe" stroke="#c4b5fd"/>
+  <text x="792" y="196" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="700" fill="#5b21b6">Nullable confirmado</text>
+</svg>
