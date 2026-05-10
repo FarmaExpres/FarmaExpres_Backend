@@ -1,9 +1,9 @@
 class HealthStatus {
-  constructor({ status, service, timestamp, database }) {
+  constructor({ status, service, timestamp, inventoryService }) {
     this.status = status;
     this.service = service;
     this.timestamp = timestamp;
-    this.database = database;
+    this.inventoryService = inventoryService;
   }
 }
 

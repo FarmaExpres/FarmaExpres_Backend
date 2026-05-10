@@ -1,9 +1,8 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const http = require("node:http");
-
-const productRepository = require("../src/repositories/productRepository");
+const inventoryClient = require("../src/clients/inventoryClient");
 const { app } = require("../src/app");
+const { requestJson } = require("./helpers");
 const { getDaysUntilDate } = require("../src/utils/dateUtils");
 
 function formatDateFromToday(offsetDays) {
@@ -16,34 +15,15 @@ function formatDateFromToday(offsetDays) {
   return `${year}-${month}-${day}`;
 }
 
-function requestJson(url) {
-  return new Promise((resolve, reject) => {
-    http.get(url, (result) => {
-      let body = "";
-
-      result.on("data", (chunk) => {
-        body += chunk;
-      });
-
-      result.on("end", () => {
-        resolve({
-          statusCode: result.statusCode,
-          body: JSON.parse(body),
-        });
-      });
-    }).on("error", reject);
-  });
-}
-
 test("GET /api/alerts/expiring-report returns consolidated expiration report", async () => {
-  const originalFindExpiringReportProducts = productRepository.findExpiringReportProducts;
+  const originalFindExpiringReportProducts = inventoryClient.findExpiringReportProducts;
   const expiredDate = formatDateFromToday(-50);
   const criticalDate = formatDateFromToday(7);
   const mediumDateA = formatDateFromToday(17);
   const mediumDateB = formatDateFromToday(27);
   const controlledDate = formatDateFromToday(34);
 
-  productRepository.findExpiringReportProducts = async () => [
+  inventoryClient.findExpiringReportProducts = async () => [
     {
       id: 10,
       code: "LOS-001",
@@ -124,7 +104,7 @@ test("GET /api/alerts/expiring-report returns consolidated expiration report", a
     assert.equal(response.body.reports[2].estado, "Medio");
     assert.equal(response.body.reports[4].estado, "Controlado");
   } finally {
-    productRepository.findExpiringReportProducts = originalFindExpiringReportProducts;
+    inventoryClient.findExpiringReportProducts = originalFindExpiringReportProducts;
 
     await new Promise((resolve, reject) => {
       server.close((error) => {
@@ -140,9 +120,9 @@ test("GET /api/alerts/expiring-report returns consolidated expiration report", a
 });
 
 test("GET /api/alerts/expiring-report filters by requested range", async () => {
-  const originalFindExpiringReportProducts = productRepository.findExpiringReportProducts;
+  const originalFindExpiringReportProducts = inventoryClient.findExpiringReportProducts;
 
-  productRepository.findExpiringReportProducts = async () => [
+  inventoryClient.findExpiringReportProducts = async () => [
     {
       id: 21,
       code: "EXP-001",
@@ -203,7 +183,7 @@ test("GET /api/alerts/expiring-report filters by requested range", async () => {
     assert.equal(response.body.reports[0].code, "MED-001");
     assert.equal(response.body.reports[0].estado, "Medio");
   } finally {
-    productRepository.findExpiringReportProducts = originalFindExpiringReportProducts;
+    inventoryClient.findExpiringReportProducts = originalFindExpiringReportProducts;
 
     await new Promise((resolve, reject) => {
       server.close((error) => {

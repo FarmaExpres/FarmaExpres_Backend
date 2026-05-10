@@ -8,13 +8,19 @@ const expiredAlertController = require("../controllers/expiredAlertController");
 const lowStockAlertController = require("../controllers/lowStockAlertController");
 const outOfStockAlertController = require("../controllers/outOfStockAlertController");
 const batchAlertsController = require("../controllers/batchAlertsController");
-const { requireReportsRole } = require("../middlewares/reportsAccessMiddleware");
+const {
+  requireAuthenticated,
+  requireReportsRole,
+} = require("../middlewares/reportsAccessMiddleware");
 
 const router = Router();
+
+router.use("/api/alerts", requireAuthenticated);
 
 router.get("/api/alerts", allAlertsController.getAllAlerts);
 router.get(
   "/api/alerts/expiring-report",
+  requireReportsRole,
   expiringProductsReportController.getExpiringProductsReport,
 );
 router.get(

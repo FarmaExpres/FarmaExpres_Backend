@@ -1,8 +1,8 @@
 const batchAlertsService = require("../services/batchAlertsService");
 
-async function getExpiredBatches(_request, response, next) {
+async function getExpiredBatches(request, response, next) {
   try {
-    const payload = await batchAlertsService.getExpiredBatches();
+    const payload = await batchAlertsService.getExpiredBatches(request.get("Authorization"));
     return response.status(200).json(payload);
   } catch (error) {
     return next(error);
@@ -19,16 +19,24 @@ function parseBoolean(value) {
 async function getExpiringBatches(request, response, next) {
   try {
     const includeExpired = parseBoolean(request.query.includeExpired);
-    const payload = await batchAlertsService.getExpiringBatches(includeExpired);
+    const payload = await batchAlertsService.getExpiringBatches(
+      includeExpired,
+      false,
+      request.get("Authorization"),
+    );
     return response.status(200).json(payload);
   } catch (error) {
     return next(error);
   }
 }
 
-async function getExpiringBatchesForReport(_request, response, next) {
+async function getExpiringBatchesForReport(request, response, next) {
   try {
-    const payload = await batchAlertsService.getExpiringBatches(true, true);
+    const payload = await batchAlertsService.getExpiringBatches(
+      true,
+      true,
+      request.get("Authorization"),
+    );
     return response.status(200).json(payload);
   } catch (error) {
     return next(error);
@@ -37,34 +45,43 @@ async function getExpiringBatchesForReport(_request, response, next) {
 
 async function getLowStockBatches(request, response, next) {
   try {
-    const payload = await batchAlertsService.getLowStockBatches(request.query.level);
+    const payload = await batchAlertsService.getLowStockBatches(
+      request.query.level,
+      request.get("Authorization"),
+    );
     return response.status(200).json(payload);
   } catch (error) {
     return next(error);
   }
 }
 
-async function getCriticalLowStockBatches(_request, response, next) {
+async function getCriticalLowStockBatches(request, response, next) {
   try {
-    const payload = await batchAlertsService.getLowStockBatches("critico");
+    const payload = await batchAlertsService.getLowStockBatches(
+      "critico",
+      request.get("Authorization"),
+    );
     return response.status(200).json(payload);
   } catch (error) {
     return next(error);
   }
 }
 
-async function getAlertLowStockBatches(_request, response, next) {
+async function getAlertLowStockBatches(request, response, next) {
   try {
-    const payload = await batchAlertsService.getLowStockBatches("alerta");
+    const payload = await batchAlertsService.getLowStockBatches(
+      "alerta",
+      request.get("Authorization"),
+    );
     return response.status(200).json(payload);
   } catch (error) {
     return next(error);
   }
 }
 
-async function getOutOfStockBatches(_request, response, next) {
+async function getOutOfStockBatches(request, response, next) {
   try {
-    const payload = await batchAlertsService.getOutOfStockBatches();
+    const payload = await batchAlertsService.getOutOfStockBatches(request.get("Authorization"));
     return response.status(200).json(payload);
   } catch (error) {
     return next(error);

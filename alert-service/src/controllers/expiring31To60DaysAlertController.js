@@ -1,8 +1,10 @@
 const expiring31To60DaysAlertService = require("../services/expiring31To60DaysAlertService");
 
-async function getExpiring31To60DaysAlerts(_request, response, next) {
+async function getExpiring31To60DaysAlerts(request, response, next) {
   try {
-    const payload = await expiring31To60DaysAlertService.getExpiring31To60DaysAlerts();
+    const payload = await expiring31To60DaysAlertService.getExpiring31To60DaysAlerts(
+      request.get("Authorization"),
+    );
     return response.status(200).json(payload);
   } catch (error) {
     return next(error);

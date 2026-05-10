@@ -1,5 +1,5 @@
 const Product = require("../models/Product");
-const productRepository = require("../repositories/productRepository");
+const inventoryClient = require("../clients/inventoryClient");
 const { getCurrentTimestamp, getDaysUntilDate } = require("../utils/dateUtils");
 const {
   matchesExpirationReportRange,
@@ -32,9 +32,12 @@ function buildSummary(items) {
   };
 }
 
-async function getExpiringProductsReport(range) {
+async function getExpiringProductsReport(range, authorizationHeader) {
   const appliedRange = normalizeRange(range);
-  const productRows = await productRepository.findExpiringReportProducts(MAX_REPORT_DAYS);
+  const productRows = await inventoryClient.findExpiringReportProducts(
+    MAX_REPORT_DAYS,
+    authorizationHeader,
+  );
 
   const reports = productRows
     .map((productRow) => {
