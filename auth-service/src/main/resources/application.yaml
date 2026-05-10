@@ -17,6 +17,7 @@ spring:
       hibernate:
         jdbc:
           time_zone: UTC
+        default_schema: ${DB_SCHEMA:auth}
     show-sql: false
   jackson:
     time-zone: UTC

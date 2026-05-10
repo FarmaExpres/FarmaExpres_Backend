@@ -1,136 +1,148 @@
-# HU-JFBM-002 - Validacion de stock en salidas
+# HU-JFBM-002 - Salida total de inventario sin error de vencimiento
 
-## 1. Historia de Usuario
+## 1. Informacion general
+- HU: `HU-JFBM-002`
+- Nombre: Salida total de inventario sin error de vencimiento
+- Componente principal: `inventory-service`
+- Componentes relacionados: `database`, `api-gateway`
+- Estado: Implementado
+- Rama de trabajo sugerida: `HU-JFBM-002-dev`
 
-### 1.1 Identificacion
+## 2. Objetivo
+Permitir que el farmaceutico registre una salida de inventario que deje un medicamento sin stock, sin que el backend falle por no tener un proximo vencimiento disponible.
 
-- **Titulo:** Validacion de stock en salidas
-- **ID:** HU-JFBM-002
-- **Relacionado:** HU-RF-02 (Frontend) / HU-RF-02 (Backend)
-- **Prioridad:** Must Have (Alta)
+## 3. Por que se necesita
+Cuando se registraba la salida de la ultima unidad de un medicamento, el sistema recalculaba el inventario del producto y dejaba:
 
-### 1.2 Descripcion
+```text
+stock = 0
+expirationdate = null
+```
 
-Como **usuario que registra salidas de inventario**,
-quiero **ver una advertencia cuando la cantidad solicitada supere el stock disponible y una confirmacion de salida exitosa cuando si haya stock suficiente**,
-para **corregir el valor antes de confirmar la salida o validar que la operacion fue registrada correctamente**.
+Esto es correcto desde negocio, porque un producto sin lotes activos no tiene proximo vencimiento operativo. Sin embargo, la base de datos tenia la columna `product.expirationdate` como obligatoria (`NOT NULL`), por lo que PostgreSQL rechazaba el cambio y el frontend recibia el mensaje generico:
 
-### 1.3 Criterios de Aceptacion
+```text
+Ocurrio un error interno en inventory-service
+```
 
-#### Interfaz
+## 4. Que se realizo
+- Se permitio que `product.expirationdate` pueda quedar en `NULL`.
+- Se agrego una migracion Liquibase para actualizar la estructura de la tabla `product`.
+- Se agrego rollback para volver a marcar la columna como obligatoria si fuera necesario.
+- Se ajusto la entidad `Product` para que el modelo Java coincida con la base de datos.
+- Se aplico la migracion en la base de datos local de desarrollo.
+- Se ejecutaron las pruebas del `inventory-service`.
 
-- [x] Existe visualizacion del **stock actual** del medicamento seleccionado en el modulo `Salidas`.
-- [x] Al seleccionar un medicamento se muestra su informacion de inventario.
-- [x] Al ingresar una cantidad mayor al stock disponible se muestra una advertencia clara.
-- [x] El usuario puede identificar el stock disponible antes de confirmar la operacion.
+## 5. Flujo corregido
 
-#### Validaciones
+```text
+Antes:
+Farmaceutico -> registra salida total -> stock queda en 0 -> expirationdate queda null -> error 500
 
-- [x] La cantidad debe ser un numero mayor a 0.
-- [x] La cantidad no puede superar el stock disponible.
-- [x] Si el valor excede el stock, se bloquea el envio o se muestra una ventana de advertencia.
-- [x] El sistema debe indicar que la cantidad maxima valida corresponde al stock actual.
+Despues:
+Farmaceutico -> registra salida total -> stock queda en 0 -> expirationdate queda null -> salida registrada correctamente
+```
 
-#### Integracion con Backend
+## 6. Cambios principales
 
-- [x] La salida sigue enviandose mediante `POST` a la operacion de salidas de inventario.
-- [x] El token se envia en el header `Authorization: Bearer <token>`.
-- [x] Si el backend rechaza la operacion por stock insuficiente, el frontend muestra el mensaje recibido o uno equivalente.
+### 6.1 Migracion de base de datos
+Se agrego el archivo:
 
-#### Respuesta del Sistema
+```text
+database/inventory/01_ddl/00_tables/004_allow_nullable_product_expirationdate.sql
+```
 
-**Exito:**
+Contenido principal:
 
-- [x] La salida se registra correctamente cuando la cantidad es valida.
-- [x] El sistema muestra un mensaje de **Salida exitosa** cuando la operacion se confirma.
-- [x] La vista se actualiza sin recargar la pagina.
-- [x] Se limpia o reinicia el formulario despues del registro exitoso.
+```sql
+ALTER TABLE product
+    ALTER COLUMN expirationdate DROP NOT NULL;
+```
 
-**Error:**
+### 6.2 Rollback de la migracion
+Se agrego el archivo:
 
-- [x] Mensaje cuando la cantidad supera el stock disponible.
-- [x] Mensaje cuando el backend detecta conflicto de inventario.
-- [x] Mensaje cuando el medicamento ya no esta disponible para movimientos.
+```text
+database/inventory/05_rollbacks/01_ddl/00_tables/004_allow_nullable_product_expirationdate.rollback.sql
+```
 
-#### Control de Acceso
+El rollback asigna una fecha a los productos que tengan `expirationdate` en `NULL` y luego vuelve a activar la restriccion `NOT NULL`.
 
-- [x] Solo usuarios autorizados para movimientos pueden registrar salidas.
-- [x] El usuario sin permisos no puede ejecutar la operacion.
+### 6.3 Changelog Liquibase
+Se actualizo:
 
-### 1.4 Checklist QA
+```text
+database/inventory/01_ddl/00_tables/changelog.yaml
+```
 
-- [x] No permite enviar cantidad vacia o menor o igual a cero.
-- [x] No permite registrar una salida por encima del stock.
-- [x] Muestra el stock actual del medicamento seleccionado.
-- [x] Muestra una advertencia clara cuando la cantidad es invalida.
-- [x] Muestra confirmacion de salida exitosa cuando la operacion se registra correctamente.
-- [x] Refresca la vista tras una salida exitosa.
-- [x] Mantiene validacion de respaldo desde backend.
+Se incluyo el changeset:
 
-### 1.5 Notas Tecnicas
+```text
+inventory-004-allow-nullable-product-expirationdate
+```
 
-- El stock actual se visualiza desde el frontend en el formulario de salidas.
-- La validacion preventiva debe realizarse en frontend antes de enviar la solicitud.
-- La validacion definitiva debe mantenerse en backend como fuente de verdad.
-- El consumo de API se realiza con Axios.
-- El manejo de conflictos de inventario ya contempla respuestas de error del backend.
+### 6.4 Entidad de producto
+Se actualizo:
 
-### 1.6 Flujo de Usuario
+```text
+inventory-service/src/main/java/co/edu/corhuila/inventory_service/Entity/Product.java
+```
 
-1. El usuario entra al modulo `Salidas`.
-2. Selecciona un medicamento del inventario.
-3. Visualiza el stock actual disponible.
-4. Ingresa una cantidad para la salida.
-5. Si la cantidad supera el stock, el sistema muestra una advertencia o bloquea la accion.
-6. Si la cantidad es valida, el sistema confirma la salida.
+El campo `expirationDate` dejo de declararse como obligatorio en JPA:
 
----
+```java
+@Column(name = "expirationdate")
+private LocalDate expirationDate;
+```
 
-## 2. Casos de Prueba Ejecutados (HU-JFBM-002)
+## 7. Criterios de aceptacion
+1. El sistema debe permitir registrar una salida de inventario que deje el stock del medicamento en `0`.
+2. Si el producto queda sin lotes activos, `expirationdate` puede quedar en `NULL`.
+3. La salida debe quedar registrada como movimiento tipo `Exit`.
+4. El frontend no debe mostrar el mensaje generico `Ocurrio un error interno en inventory-service` para este caso.
+5. La migracion debe poder aplicarse con Liquibase sin errores.
+6. Las pruebas del `inventory-service` deben pasar.
 
-> Ruta de evidencias: `doc/images/HU-JFBM-002/`
+## 8. Validacion realizada
+Se aplico la migracion con Liquibase:
 
-### CP-HU-JFBM-002-01 - Visualizacion del stock actual
+```bash
+docker compose run --rm liquibase-inventory
+```
 
-- **Objetivo:** validar que el usuario vea el stock del medicamento antes de registrar la salida.
-- **Accion ejecutada:** ingreso al modulo `Salidas` y seleccion de un medicamento.
-- **Resultado evidenciado:** se visualiza el stock actual del medicamento seleccionado.
-- **Evidencia:**
+Resultado:
 
-![CP-HU-JFBM-002-01](./images/HU-JFBM-002/01-stock-actual-medicamento.png)
+```text
+Liquibase: Update has been successful.
+```
 
-### CP-HU-JFBM-002-02 - Advertencia por cantidad mayor al stock
+Se verifico la columna en PostgreSQL:
 
-- **Objetivo:** validar el bloqueo o la advertencia preventiva por stock insuficiente.
-- **Accion ejecutada:** ingreso de una cantidad mayor al stock disponible.
-- **Resultado evidenciado:** se muestra una ventana o mensaje que indica stock insuficiente.
-- **Evidencia:**
+```sql
+SELECT column_name, is_nullable
+FROM information_schema.columns
+WHERE table_name = 'product'
+  AND column_name = 'expirationdate';
+```
 
-![CP-HU-JFBM-002-02](./images/HU-JFBM-002/02-advertencia-stock-insuficiente.png)
+Resultado esperado:
 
-### CP-HU-JFBM-002-03 - Registro exitoso con cantidad valida
+```text
+expirationdate | YES
+```
 
-- **Objetivo:** validar que la salida se registre cuando la cantidad es correcta.
-- **Accion ejecutada:** ingreso de una cantidad menor o igual al stock disponible.
-- **Resultado evidenciado:** aparece el mensaje de **Salida exitosa**, la salida se registra correctamente y la lista se actualiza.
-- **Evidencia:**
+Se ejecutaron las pruebas:
 
-![CP-HU-JFBM-002-03](./images/HU-JFBM-002/03-salida-exitosa.png)
+```bash
+./mvnw test
+```
 
-### CP-HU-JFBM-002-04 - Respuesta por conflicto del backend
+Resultado:
 
-- **Objetivo:** validar el mensaje cuando el stock cambia entre la seleccion y el envio.
-- **Accion ejecutada:** intento de registrar una salida con stock ya modificado en backend.
-- **Resultado evidenciado:** el sistema muestra mensaje de conflicto de inventario.
-- **Evidencia:**
+```text
+Tests run: 30, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
 
-![CP-HU-JFBM-002-04](./images/HU-JFBM-002/04-conflicto-backend-stock.png)
-
----
-
-## 3. Conclusiones de Prueba
-
-- La HU-JFBM-002 define la advertencia de stock insuficiente en el flujo de salidas.
-- El frontend debe validar la cantidad antes de confirmar la operacion.
-- El backend debe mantenerse como respaldo para evitar salidas invalidas.
-- La experiencia del usuario mejora al mostrar el stock actual, un mensaje claro antes del envio y la confirmacion de salida exitosa.
+## 9. Resultado esperado
+El farmaceutico puede registrar salidas de inventario completas sobre un medicamento. Si la salida consume la ultima unidad disponible, el producto queda con stock `0` y sin proximo vencimiento operativo, sin generar error interno en `inventory-service`.
