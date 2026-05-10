@@ -1,4 +1,0 @@
-databaseChangeLog:
-  - include:
-      file: 00_seed/changelog.yaml
-      relativeToChangelogFile: true
