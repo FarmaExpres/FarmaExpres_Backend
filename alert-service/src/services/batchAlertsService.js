@@ -1,7 +1,7 @@
 const BatchAlertItem = require("../models/BatchAlertItem");
 const { env } = require("../config/env");
 const { getCurrentTimestamp, getDaysUntilDate } = require("../utils/dateUtils");
-const productRepository = require("../repositories/productRepository");
+const inventoryClient = require("../clients/inventoryClient");
 
 function mapBatchRows(rows) {
   return rows.map((row) => {
@@ -53,8 +53,8 @@ function calculateSuggestedUnits(availableStock, minimumStock) {
   return safeMinimum + Math.max(missingUnits, 0);
 }
 
-async function getExpiredBatches() {
-  const rows = await productRepository.findExpiredBatches();
+async function getExpiredBatches(authorizationHeader) {
+  const rows = await inventoryClient.findExpiredBatches(authorizationHeader);
   const items = mapBatchRows(rows).map((item) => {
     item.daysExpired = Math.abs(item.daysUntilExpiration);
     item.expiredBatchStock = item.expiredBatchStock ?? item.batchStock ?? item.availableStock;
@@ -67,11 +67,12 @@ async function getExpiredBatches() {
   };
 }
 
-async function getExpiringBatches(includeExpired = false, onlyWithStock = false) {
-  const rows = await productRepository.findExpiringBatches(
+async function getExpiringBatches(includeExpired = false, onlyWithStock = false, authorizationHeader) {
+  const rows = await inventoryClient.findExpiringBatches(
     env.inventory.expiringSoonDays,
     includeExpired,
     onlyWithStock,
+    authorizationHeader,
   );
   const items = mapBatchRows(rows);
   return {
@@ -81,8 +82,8 @@ async function getExpiringBatches(includeExpired = false, onlyWithStock = false)
   };
 }
 
-async function getLowStockBatches(filterLevel) {
-  const rows = await productRepository.findLowStockBatches();
+async function getLowStockBatches(filterLevel, authorizationHeader) {
+  const rows = await inventoryClient.findLowStockBatches(authorizationHeader);
   const items = mapBatchRows(rows).map((item) => {
     const level = resolveLowStockLevel(item.availableStock, item.minimumStock);
     const coveragePercent = calculateCoveragePercent(item.availableStock, item.minimumStock);
@@ -117,8 +118,8 @@ async function getLowStockBatches(filterLevel) {
   };
 }
 
-async function getOutOfStockBatches() {
-  const rows = await productRepository.findOutOfStockBatches();
+async function getOutOfStockBatches(authorizationHeader) {
+  const rows = await inventoryClient.findOutOfStockBatches(authorizationHeader);
   const items = mapBatchRows(rows);
   return {
     generatedAt: getCurrentTimestamp(),
@@ -127,12 +128,12 @@ async function getOutOfStockBatches() {
   };
 }
 
-async function getAlertsBatchesReport() {
+async function getAlertsBatchesReport(authorizationHeader) {
   const [expired, expiring, lowStock, outOfStock] = await Promise.all([
-    getExpiredBatches(),
-    getExpiringBatches(),
-    getLowStockBatches(),
-    getOutOfStockBatches(),
+    getExpiredBatches(authorizationHeader),
+    getExpiringBatches(false, false, authorizationHeader),
+    getLowStockBatches(undefined, authorizationHeader),
+    getOutOfStockBatches(authorizationHeader),
   ]);
 
   return {

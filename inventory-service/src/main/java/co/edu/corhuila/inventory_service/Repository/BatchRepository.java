@@ -23,6 +23,21 @@ public interface BatchRepository extends JpaRepository<Batch, Long> {
         Integer getActiveBatchesCount();
     }
 
+    interface InventoryAlertBatchProjection {
+        Long getProductId();
+        String getProductCode();
+        String getProductName();
+        Integer getMinimumStock();
+        Long getBatchId();
+        String getBatchCode();
+        java.time.LocalDate getExpirationDate();
+        Integer getAvailableStock();
+        Integer getBatchStock();
+        Integer getExpiredBatchStock();
+        Integer getOperationalStock();
+        String getStatus();
+    }
+
     List<Batch> findByProductIdOrderByExpirationDateAsc(Long productId);
 
     @Query("""
@@ -149,4 +164,144 @@ public interface BatchRepository extends JpaRepository<Batch, Long> {
             ORDER BY p.name ASC
             """, nativeQuery = true)
     List<FefoSnapshotProjection> findFefoSnapshot();
+
+    @Query(value = """
+            WITH operational AS (
+              SELECT
+                b2.product_id,
+                COALESCE(SUM(b2.available_stock), 0)::int AS operational_stock
+              FROM batch b2
+              WHERE b2.status = 'ACTIVE'
+                AND b2.available_stock > 0
+                AND b2.expiration_date >= CURRENT_DATE
+              GROUP BY b2.product_id
+            )
+            SELECT
+              p.id AS productId,
+              p.code AS productCode,
+              p.name AS productName,
+              p.minimumstock AS minimumStock,
+              b.id AS batchId,
+              b.batch_code AS batchCode,
+              b.expiration_date AS expirationDate,
+              b.available_stock AS availableStock,
+              b.available_stock AS batchStock,
+              CASE WHEN b.expiration_date < CURRENT_DATE THEN b.available_stock ELSE NULL END AS expiredBatchStock,
+              COALESCE(o.operational_stock, 0) AS operationalStock,
+              b.status AS status
+            FROM batch b
+            JOIN product p ON p.id = b.product_id
+            LEFT JOIN operational o ON o.product_id = p.id
+            WHERE p.asset = TRUE
+              AND b.status <> 'RETIRED'
+              AND b.available_stock > 0
+              AND b.expiration_date < CURRENT_DATE
+            ORDER BY b.expiration_date ASC, p.name ASC
+            """, nativeQuery = true)
+    List<InventoryAlertBatchProjection> findExpiredAlertBatches();
+
+    @Query(value = """
+            WITH operational AS (
+              SELECT
+                b2.product_id,
+                COALESCE(SUM(b2.available_stock), 0)::int AS operational_stock
+              FROM batch b2
+              WHERE b2.status = 'ACTIVE'
+                AND b2.available_stock > 0
+                AND b2.expiration_date >= CURRENT_DATE
+              GROUP BY b2.product_id
+            )
+            SELECT
+              p.id AS productId,
+              p.code AS productCode,
+              p.name AS productName,
+              p.minimumstock AS minimumStock,
+              b.id AS batchId,
+              b.batch_code AS batchCode,
+              b.expiration_date AS expirationDate,
+              b.available_stock AS availableStock,
+              b.available_stock AS batchStock,
+              NULL AS expiredBatchStock,
+              COALESCE(o.operational_stock, 0) AS operationalStock,
+              b.status AS status
+            FROM batch b
+            JOIN product p ON p.id = b.product_id
+            LEFT JOIN operational o ON o.product_id = p.id
+            WHERE p.asset = TRUE
+              AND b.status <> 'RETIRED'
+              AND (:includeExpired = TRUE OR b.expiration_date >= CURRENT_DATE)
+              AND (:onlyWithStock = FALSE OR b.available_stock > 0)
+              AND b.expiration_date <= CURRENT_DATE + (:daysWindow * INTERVAL '1 day')
+            ORDER BY b.expiration_date ASC, p.name ASC
+            """, nativeQuery = true)
+    List<InventoryAlertBatchProjection> findExpiringAlertBatches(Integer daysWindow, Boolean includeExpired, Boolean onlyWithStock);
+
+    @Query(value = """
+            WITH operational AS (
+              SELECT
+                b2.product_id,
+                COALESCE(SUM(b2.available_stock), 0)::int AS operational_stock
+              FROM batch b2
+              WHERE b2.status = 'ACTIVE'
+                AND b2.available_stock > 0
+                AND b2.expiration_date >= CURRENT_DATE
+              GROUP BY b2.product_id
+            )
+            SELECT
+              p.id AS productId,
+              p.code AS productCode,
+              p.name AS productName,
+              p.minimumstock AS minimumStock,
+              b.id AS batchId,
+              b.batch_code AS batchCode,
+              b.expiration_date AS expirationDate,
+              b.available_stock AS availableStock,
+              b.available_stock AS batchStock,
+              NULL AS expiredBatchStock,
+              COALESCE(o.operational_stock, 0) AS operationalStock,
+              b.status AS status
+            FROM batch b
+            JOIN product p ON p.id = b.product_id
+            LEFT JOIN operational o ON o.product_id = p.id
+            WHERE p.asset = TRUE
+              AND b.status <> 'RETIRED'
+              AND b.available_stock > 0
+              AND b.available_stock <= p.minimumstock
+            ORDER BY b.available_stock ASC, p.name ASC
+            """, nativeQuery = true)
+    List<InventoryAlertBatchProjection> findLowStockAlertBatches();
+
+    @Query(value = """
+            WITH operational AS (
+              SELECT
+                b2.product_id,
+                COALESCE(SUM(b2.available_stock), 0)::int AS operational_stock
+              FROM batch b2
+              WHERE b2.status = 'ACTIVE'
+                AND b2.available_stock > 0
+                AND b2.expiration_date >= CURRENT_DATE
+              GROUP BY b2.product_id
+            )
+            SELECT
+              p.id AS productId,
+              p.code AS productCode,
+              p.name AS productName,
+              p.minimumstock AS minimumStock,
+              b.id AS batchId,
+              b.batch_code AS batchCode,
+              b.expiration_date AS expirationDate,
+              b.available_stock AS availableStock,
+              b.available_stock AS batchStock,
+              NULL AS expiredBatchStock,
+              COALESCE(o.operational_stock, 0) AS operationalStock,
+              b.status AS status
+            FROM batch b
+            JOIN product p ON p.id = b.product_id
+            LEFT JOIN operational o ON o.product_id = p.id
+            WHERE p.asset = TRUE
+              AND b.status <> 'RETIRED'
+              AND b.available_stock = 0
+            ORDER BY b.expiration_date ASC, p.name ASC
+            """, nativeQuery = true)
+    List<InventoryAlertBatchProjection> findOutOfStockAlertBatches();
 }

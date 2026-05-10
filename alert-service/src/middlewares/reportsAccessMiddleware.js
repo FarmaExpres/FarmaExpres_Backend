@@ -38,34 +38,56 @@ function verifyJwt(token) {
 }
 
 function requireReportsRole(request, response, next) {
+  const payload = authenticateRequest(request, response);
+  if (!payload) {
+    return undefined;
+  }
+
+  const role = String(payload.rol || payload.role || "").toUpperCase();
+  if (!REPORT_ALLOWED_ROLES.has(role)) {
+    return response.status(403).json({ error: "FORBIDDEN", message: "Acceso denegado para este rol" });
+  }
+
+  return next();
+}
+
+function requireAuthenticated(request, response, next) {
+  const payload = authenticateRequest(request, response);
+  if (!payload) {
+    return undefined;
+  }
+
+  return next();
+}
+
+function authenticateRequest(request, response) {
   const authHeader = request.get("Authorization");
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return response.status(401).json({ error: "UNAUTHORIZED", message: "Token requerido" });
+    response.status(401).json({ error: "UNAUTHORIZED", message: "Token requerido" });
+    return null;
   }
 
   try {
     const token = authHeader.substring(7).trim();
     const payload = verifyJwt(token);
-    const role = String(payload.rol || payload.role || "").toUpperCase();
 
     const exp = Number(payload.exp);
     if (Number.isFinite(exp)) {
       const nowInSeconds = Math.floor(Date.now() / 1000);
       if (exp <= nowInSeconds) {
-        return response.status(401).json({ error: "UNAUTHORIZED", message: "Token expirado" });
+        response.status(401).json({ error: "UNAUTHORIZED", message: "Token expirado" });
+        return null;
       }
     }
 
-    if (!REPORT_ALLOWED_ROLES.has(role)) {
-      return response.status(403).json({ error: "FORBIDDEN", message: "Acceso denegado para este rol" });
-    }
-
-    return next();
+    return payload;
   } catch (_error) {
-    return response.status(401).json({ error: "UNAUTHORIZED", message: "Token invalido" });
+    response.status(401).json({ error: "UNAUTHORIZED", message: "Token invalido" });
+    return null;
   }
 }
 
 module.exports = {
+  requireAuthenticated,
   requireReportsRole,
 };

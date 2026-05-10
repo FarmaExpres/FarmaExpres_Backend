@@ -8,17 +8,9 @@ const env = {
   nodeEnv: process.env.NODE_ENV || "development",
   appTimeZone: process.env.APP_TIME_ZONE || "America/Bogota",
   inventory: {
-    productsTable: process.env.INVENTORY_PRODUCTS_TABLE || "product",
     expiringSoonDays: Number(process.env.EXPIRING_SOON_DAYS || 15),
-  },
-  database: {
-    host: process.env.DB_HOST || "localhost",
-    port: Number(process.env.DB_PORT || 5432),
-    name: process.env.DB_NAME || "farmaexpres",
-    schema: process.env.DB_SCHEMA || "inventory",
-    user: process.env.DB_USER || "farmaexpres_inventory_read_user",
-    password: process.env.DB_PASSWORD || "inventory_read_dev_password",
-    ssl: String(process.env.DB_SSL || "false").toLowerCase() === "true",
+    serviceUrl: process.env.INVENTORY_SERVICE_URL || "http://localhost:8082",
+    requestTimeoutMs: Number(process.env.INVENTORY_SERVICE_TIMEOUT_MS || 5000),
   },
 };
 

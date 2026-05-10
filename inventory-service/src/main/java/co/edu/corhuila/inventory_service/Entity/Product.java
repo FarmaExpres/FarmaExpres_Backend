@@ -77,7 +77,7 @@ public class Product {
     @Column(name = "minimumstock", nullable = false)
     private Integer minimumStock;
 
-    @Column(name = "expirationdate", nullable = false)
+    @Column(name = "expirationdate")
     private LocalDate expirationDate;
 
     
