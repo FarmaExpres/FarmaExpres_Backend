@@ -4,14 +4,13 @@ const { getCurrentTimestamp } = require("../utils/dateUtils");
 const healthRepository = require("../repositories/healthRepository");
 
 async function buildStatus() {
-  const databaseReachable = await healthRepository.isDatabaseReachable();
-  const status = databaseReachable ? "UP" : "DOWN";
+  const inventoryServiceReachable = await healthRepository.isInventoryServiceReachable();
 
   return new HealthStatus({
-    status,
+    status: "UP",
     service: env.serviceName,
     timestamp: getCurrentTimestamp(),
-    database: databaseReachable ? "UP" : "DOWN",
+    inventoryService: inventoryServiceReachable ? "UP" : "DOWN",
   });
 }
 

@@ -4,10 +4,10 @@ const Product = require("../models/Product");
 const { ALERT_SEVERITIES, ALERT_TYPES } = require("../config/constants");
 const { getCurrentTimestamp, getDaysUntilDate } = require("../utils/dateUtils");
 const { resolveExpirationReportStatus } = require("../utils/alertUtils");
-const productRepository = require("../repositories/productRepository");
+const inventoryClient = require("../clients/inventoryClient");
 
-async function getExpiredAlerts() {
-  const products = await productRepository.findExpiredBatches();
+async function getExpiredAlerts(authorizationHeader) {
+  const products = await inventoryClient.findExpiredBatches(authorizationHeader);
 
   const alerts = products.map((productRow) => {
     const product = new Product({

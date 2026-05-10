@@ -52,6 +52,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/products/fefo-snapshot")
                         .hasAnyRole("ADMIN", "FARMACEUTICO")
 
+                        // Internal inventory contracts consumed by alert-service
+                        .requestMatchers(HttpMethod.GET, "/api/inventory/alerts/**")
+                        .hasAnyRole("ADMIN", "AUDITOR", "FARMACEUTICO")
+                        .requestMatchers(HttpMethod.GET, "/api/inventory/reports/**")
+                        .hasAnyRole("ADMIN", "AUDITOR", "FARMACEUTICO")
+
                         // Administrative product management: includes inactive products
                         .requestMatchers(HttpMethod.GET, "/api/products/all")
                         .hasAnyRole("ADMIN", "AUDITOR")

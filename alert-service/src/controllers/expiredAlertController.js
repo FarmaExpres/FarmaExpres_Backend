@@ -1,8 +1,8 @@
 const expiredAlertService = require("../services/expiredAlertService");
 
-async function getExpiredAlerts(_request, response, next) {
+async function getExpiredAlerts(request, response, next) {
   try {
-    const payload = await expiredAlertService.getExpiredAlerts();
+    const payload = await expiredAlertService.getExpiredAlerts(request.get("Authorization"));
     return response.status(200).json(payload);
   } catch (error) {
     return next(error);
