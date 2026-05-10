@@ -8,12 +8,14 @@ const {
   resolveExpirationReportStatus,
   resolveExpiringSoonSeverity,
 } = require("../utils/alertUtils");
-const productRepository = require("../repositories/productRepository");
+const inventoryClient = require("../clients/inventoryClient");
 
-async function getExpiringSoonAlerts() {
-  const products = await productRepository.findExpiringBatches(
+async function getExpiringSoonAlerts(authorizationHeader) {
+  const products = await inventoryClient.findExpiringBatches(
     env.inventory.expiringSoonDays,
     false,
+    false,
+    authorizationHeader,
   );
 
   const alerts = products.map((productRow) => {

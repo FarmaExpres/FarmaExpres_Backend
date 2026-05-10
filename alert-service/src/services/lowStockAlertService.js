@@ -4,10 +4,10 @@ const Product = require("../models/Product");
 const { ALERT_TYPES } = require("../config/constants");
 const { resolveLowStockSeverity } = require("../utils/alertUtils");
 const { getCurrentTimestamp } = require("../utils/dateUtils");
-const productRepository = require("../repositories/productRepository");
+const inventoryClient = require("../clients/inventoryClient");
 
-async function getLowStockAlerts() {
-  const products = await productRepository.findLowStockBatches();
+async function getLowStockAlerts(authorizationHeader) {
+  const products = await inventoryClient.findLowStockBatches(authorizationHeader);
 
   const alerts = products.map((productRow) => {
     const product = new Product({

@@ -4,17 +4,17 @@ const lowStockAlertService = require("./lowStockAlertService");
 const outOfStockAlertService = require("./outOfStockAlertService");
 const { getCurrentTimestamp } = require("../utils/dateUtils");
 
-async function getAllAlerts() {
+async function getAllAlerts(authorizationHeader) {
   const [
     outOfStockResult,
     expiredResult,
     lowStockResult,
     expiringSoonResult,
   ] = await Promise.all([
-    outOfStockAlertService.getOutOfStockAlerts(),
-    expiredAlertService.getExpiredAlerts(),
-    lowStockAlertService.getLowStockAlerts(),
-    expiringSoonAlertService.getExpiringSoonAlerts(),
+    outOfStockAlertService.getOutOfStockAlerts(authorizationHeader),
+    expiredAlertService.getExpiredAlerts(authorizationHeader),
+    lowStockAlertService.getLowStockAlerts(authorizationHeader),
+    expiringSoonAlertService.getExpiringSoonAlerts(authorizationHeader),
   ]);
 
   const outOfStockCount = outOfStockResult.alerts.length;
