@@ -3,21 +3,21 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'farmaexpres_auth_app_user') THEN
         CREATE ROLE farmaexpres_auth_app_user
             LOGIN
-            PASSWORD 'AuthApp123!';
+            PASSWORD '${AUTH_DB_PASSWORD}';
     ELSE
         ALTER ROLE farmaexpres_auth_app_user
             WITH LOGIN
-            PASSWORD 'AuthApp123!';
+            PASSWORD '${AUTH_DB_PASSWORD}';
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'farmaexpres_auth_read_user') THEN
         CREATE ROLE farmaexpres_auth_read_user
             LOGIN
-            PASSWORD 'AuthRead123!';
+            PASSWORD '${AUTH_READ_DB_PASSWORD}';
     ELSE
         ALTER ROLE farmaexpres_auth_read_user
             WITH LOGIN
-            PASSWORD 'AuthRead123!';
+            PASSWORD '${AUTH_READ_DB_PASSWORD}';
     END IF;
 END
 $$;

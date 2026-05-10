@@ -1,9 +1,12 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5433/farmaexpres_users
-    username: postgres
-    password: 1234
+    url: jdbc:postgresql://localhost:5433/farmaexpres?currentSchema=auth
+    username: ${AUTH_DB_USERNAME:farmaexpres_auth_app_user}
+    password: ${AUTH_DB_PASSWORD:auth_app_dev_password}
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: auth
     show-sql: false

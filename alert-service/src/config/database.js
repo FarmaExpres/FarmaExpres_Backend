@@ -11,6 +11,7 @@ function getPool() {
       database: env.database.name,
       user: env.database.user,
       password: env.database.password,
+      options: `-c search_path=${env.database.schema}`,
       ssl: env.database.ssl ? { rejectUnauthorized: false } : false,
     });
   }

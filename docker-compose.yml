@@ -17,18 +17,44 @@ services:
       timeout: 10s
       retries: 5
 
-  liquibase-auth:
-    image: liquibase/liquibase:4.31
+  postgres-init:
+    image: postgres:16
     depends_on:
       postgres:
         condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:-1234}
+    volumes:
+      - ./database/bootstrap.sql:/workspace/bootstrap.sql
+    command:
+      - psql
+      - -h
+      - postgres
+      - -U
+      - ${POSTGRES_USER:-postgres}
+      - -d
+      - postgres
+      - -v
+      - ON_ERROR_STOP=1
+      - -f
+      - /workspace/bootstrap.sql
+
+  liquibase-auth:
+    image: liquibase/liquibase:4.31
+    depends_on:
+      postgres-init:
+        condition: service_completed_successfully
     volumes:
       - ./database:/workspace/database
     working_dir: /workspace/database/auth
+    environment:
+      AUTH_DB_PASSWORD: ${AUTH_DB_PASSWORD:-auth_app_dev_password}
+      AUTH_READ_DB_PASSWORD: ${AUTH_READ_DB_PASSWORD:-auth_read_dev_password}
     command:
       - --search-path=/workspace/database/auth
       - --changeLogFile=changelog-master.yaml
-      - --url=jdbc:postgresql://postgres:5432/farmaexpres_users
+      - --url=jdbc:postgresql://postgres:5432/farmaexpres
+      - --default-schema-name=auth
       - --username=${POSTGRES_USER:-postgres}
       - --password=${POSTGRES_PASSWORD:-1234}
       - update
@@ -36,15 +62,19 @@ services:
   liquibase-inventory:
     image: liquibase/liquibase:4.31
     depends_on:
-      postgres:
-        condition: service_healthy
+      postgres-init:
+        condition: service_completed_successfully
     volumes:
       - ./database:/workspace/database
     working_dir: /workspace/database/inventory
+    environment:
+      INVENTORY_DB_PASSWORD: ${INVENTORY_DB_PASSWORD:-inventory_app_dev_password}
+      INVENTORY_READ_DB_PASSWORD: ${INVENTORY_READ_DB_PASSWORD:-inventory_read_dev_password}
     command:
       - --search-path=/workspace/database/inventory
       - --changeLogFile=changelog-master.yaml
-      - --url=jdbc:postgresql://postgres:5432/farmaexpres_inventory
+      - --url=jdbc:postgresql://postgres:5432/farmaexpres
+      - --default-schema-name=inventory
       - --username=${POSTGRES_USER:-postgres}
       - --password=${POSTGRES_PASSWORD:-1234}
       - update
@@ -57,9 +87,10 @@ services:
     ports:
       - "${AUTH_PORT:-8081}:8081"
     environment:
-      DB_URL: jdbc:postgresql://postgres:5432/farmaexpres_users
-      DB_USERNAME: ${POSTGRES_USER:-postgres}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-1234}
+      DB_URL: jdbc:postgresql://postgres:5432/farmaexpres?currentSchema=auth
+      DB_SCHEMA: auth
+      DB_USERNAME: ${AUTH_DB_USERNAME:-farmaexpres_auth_app_user}
+      DB_PASSWORD: ${AUTH_DB_PASSWORD:-auth_app_dev_password}
       JWT_SECRET: ${JWT_SECRET:-mi_clave_super_secreta_ultra_segura_de_256_bits_minimo_1234567890}
       JWT_ACCESS_EXPIRATION_MS: ${JWT_ACCESS_EXPIRATION_MS:-900000}
       JWT_REFRESH_EXPIRATION_MS: ${JWT_REFRESH_EXPIRATION_MS:-86400000}
@@ -77,9 +108,10 @@ services:
     ports:
       - "${INVENTORY_PORT:-8082}:8082"
     environment:
-      DB_URL: jdbc:postgresql://postgres:5432/farmaexpres_inventory
-      DB_USERNAME: ${POSTGRES_USER:-postgres}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-1234}
+      DB_URL: jdbc:postgresql://postgres:5432/farmaexpres?currentSchema=inventory
+      DB_SCHEMA: inventory
+      DB_USERNAME: ${INVENTORY_DB_USERNAME:-farmaexpres_inventory_app_user}
+      DB_PASSWORD: ${INVENTORY_DB_PASSWORD:-inventory_app_dev_password}
       JWT_SECRET: ${JWT_SECRET:-mi_clave_super_secreta_ultra_segura_de_256_bits_minimo_1234567890}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
@@ -101,9 +133,10 @@ services:
       APP_TIME_ZONE: America/Bogota
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: farmaexpres_inventory
-      DB_USER: ${POSTGRES_USER:-postgres}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-1234}
+      DB_NAME: farmaexpres
+      DB_SCHEMA: inventory
+      DB_USER: ${INVENTORY_READ_DB_USERNAME:-farmaexpres_inventory_read_user}
+      DB_PASSWORD: ${INVENTORY_READ_DB_PASSWORD:-inventory_read_dev_password}
       DB_SSL: false
       JWT_SECRET: ${JWT_SECRET:-mi_clave_super_secreta_ultra_segura_de_256_bits_minimo_1234567890}
     healthcheck:
