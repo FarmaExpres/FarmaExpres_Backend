@@ -1,0 +1,43 @@
+databaseChangeLog:
+  - changeSet:
+      id: inventory-101-seed-products
+      author: System
+      comment: Inserta el catalogo base de productos.
+      changes:
+        - sqlFile:
+            path: 001_seed_products.sql
+            relativeToChangelogFile: true
+            stripComments: false
+      rollback:
+        - sqlFile:
+            path: ../../../05_rollbacks/02_dml/00_seed/001_seed_products.rollback.sql
+            relativeToChangelogFile: true
+            stripComments: false
+  - changeSet:
+      id: inventory-102-seed-batches
+      author: System
+      comment: Inserta un lote inicial por producto.
+      changes:
+        - sqlFile:
+            path: 002_seed_batches.sql
+            relativeToChangelogFile: true
+            stripComments: false
+      rollback:
+        - sqlFile:
+            path: ../../../05_rollbacks/02_dml/00_seed/002_seed_batches.rollback.sql
+            relativeToChangelogFile: true
+            stripComments: false
+  - changeSet:
+      id: inventory-103-seed-motions
+      author: System
+      comment: Inserta movimientos iniciales asociados a la carga de catalogo.
+      changes:
+        - sqlFile:
+            path: 003_seed_motions.sql
+            relativeToChangelogFile: true
+            stripComments: false
+      rollback:
+        - sqlFile:
+            path: ../../../05_rollbacks/02_dml/00_seed/003_seed_motions.rollback.sql
+            relativeToChangelogFile: true
+            stripComments: false

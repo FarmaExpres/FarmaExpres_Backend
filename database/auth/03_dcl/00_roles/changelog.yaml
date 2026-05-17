@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: auth-201-create-access-roles
+      author: System
+      comment: Crea roles de acceso para la base de autenticacion.
+      changes:
+        - sqlFile:
+            path: 001_create_access_roles.sql
+            relativeToChangelogFile: true
+            stripComments: false
+            splitStatements: false
+      rollback:
+        - sqlFile:
+            path: ../../../05_rollbacks/03_dcl/00_roles/001_create_access_roles.rollback.sql
+            relativeToChangelogFile: true
+            stripComments: false
