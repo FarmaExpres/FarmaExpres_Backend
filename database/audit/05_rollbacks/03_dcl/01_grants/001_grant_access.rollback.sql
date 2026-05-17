@@ -1,0 +1,14 @@
+REVOKE SELECT ON SEQUENCE audit.audit_rule_result_id_seq FROM farmaexpres_audit_readonly;
+REVOKE SELECT ON SEQUENCE audit.audit_observation_id_seq FROM farmaexpres_audit_readonly;
+REVOKE SELECT ON SEQUENCE audit.audit_case_id_seq FROM farmaexpres_audit_readonly;
+REVOKE SELECT ON TABLE audit.audit_rule_result FROM farmaexpres_audit_readonly;
+REVOKE SELECT ON TABLE audit.audit_observation FROM farmaexpres_audit_readonly;
+REVOKE SELECT ON TABLE audit.audit_case FROM farmaexpres_audit_readonly;
+REVOKE USAGE, SELECT ON SEQUENCE audit.audit_rule_result_id_seq FROM farmaexpres_audit_app;
+REVOKE USAGE, SELECT ON SEQUENCE audit.audit_observation_id_seq FROM farmaexpres_audit_app;
+REVOKE USAGE, SELECT ON SEQUENCE audit.audit_case_id_seq FROM farmaexpres_audit_app;
+REVOKE SELECT, INSERT, UPDATE, DELETE ON TABLE audit.audit_rule_result FROM farmaexpres_audit_app;
+REVOKE SELECT, INSERT, UPDATE, DELETE ON TABLE audit.audit_observation FROM farmaexpres_audit_app;
+REVOKE SELECT, INSERT, UPDATE, DELETE ON TABLE audit.audit_case FROM farmaexpres_audit_app;
+REVOKE USAGE ON SCHEMA audit FROM farmaexpres_audit_readonly;
+REVOKE USAGE ON SCHEMA audit FROM farmaexpres_audit_app;
