@@ -64,7 +64,7 @@ class AuditServiceTest {
 
         AuditCase existing = auditCase(21L, AuditCaseSource.AUTO, AuditCaseStatus.OPEN);
         when(inventoryClient.getMovement(21L, AUTH)).thenReturn(movement(21L));
-        when(auditCaseRepository.findFirstByMovementIdAndStatusIn(eq(21L), any())).thenReturn(Optional.of(existing));
+        when(auditCaseRepository.findFirstByMovementIdOrderByCreatedAtDesc(21L)).thenReturn(Optional.of(existing));
         when(auditCaseRepository.save(existing)).thenReturn(existing);
 
         auditService.createManualCase(request, AUTH);
@@ -104,7 +104,7 @@ class AuditServiceTest {
         );
 
         when(inventoryClient.listMovements(AUTH)).thenReturn(List.of(movement));
-        when(auditCaseRepository.findFirstByMovementIdAndStatusIn(eq(21L), any())).thenReturn(Optional.empty());
+        when(auditCaseRepository.findFirstByMovementIdOrderByCreatedAtDesc(21L)).thenReturn(Optional.empty());
         when(auditRuleEngine.evaluate(movement, List.of(movement))).thenReturn(List.of(finding));
         when(auditRuleEngine.strongest(List.of(finding))).thenReturn(Optional.of(finding));
         when(auditCaseRepository.saveAll(any())).thenAnswer(invocation -> invocation.getArgument(0));
