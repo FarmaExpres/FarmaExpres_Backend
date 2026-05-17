@@ -1,0 +1,43 @@
+databaseChangeLog:
+  - changeSet:
+      id: audit-001-create-audit-case-table
+      author: System
+      comment: Crea la tabla principal de casos de auditoria.
+      changes:
+        - sqlFile:
+            path: 001_create_audit_case_table.sql
+            relativeToChangelogFile: true
+            stripComments: false
+      rollback:
+        - sqlFile:
+            path: ../../../05_rollbacks/01_ddl/00_tables/001_create_audit_case_table.rollback.sql
+            relativeToChangelogFile: true
+            stripComments: false
+  - changeSet:
+      id: audit-002-create-audit-observation-table
+      author: System
+      comment: Crea la tabla de observaciones de auditoria.
+      changes:
+        - sqlFile:
+            path: 002_create_audit_observation_table.sql
+            relativeToChangelogFile: true
+            stripComments: false
+      rollback:
+        - sqlFile:
+            path: ../../../05_rollbacks/01_ddl/00_tables/002_create_audit_observation_table.rollback.sql
+            relativeToChangelogFile: true
+            stripComments: false
+  - changeSet:
+      id: audit-003-create-audit-rule-result-table
+      author: System
+      comment: Crea la tabla de resultados de reglas de auditoria.
+      changes:
+        - sqlFile:
+            path: 003_create_audit_rule_result_table.sql
+            relativeToChangelogFile: true
+            stripComments: false
+      rollback:
+        - sqlFile:
+            path: ../../../05_rollbacks/01_ddl/00_tables/003_create_audit_rule_result_table.rollback.sql
+            relativeToChangelogFile: true
+            stripComments: false

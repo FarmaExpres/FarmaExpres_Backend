@@ -2,7 +2,6 @@ package co.edu.corhuila.api_gateway;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -13,19 +12,24 @@ import java.util.Map;
 @RequestMapping("/fallback")
 public class FallbackController {
 
-    @GetMapping("/auth")
+    @RequestMapping("/auth")
     public ResponseEntity<Map<String, Object>> authFallback(ServerHttpRequest request) {
         return ResponseEntity.status(503).body(buildBody("auth-service", request));
     }
 
-    @GetMapping("/inventory")
+    @RequestMapping("/inventory")
     public ResponseEntity<Map<String, Object>> inventoryFallback(ServerHttpRequest request) {
         return ResponseEntity.status(503).body(buildBody("inventory-service", request));
     }
 
-    @GetMapping("/alerts")
+    @RequestMapping("/alerts")
     public ResponseEntity<Map<String, Object>> alertsFallback(ServerHttpRequest request) {
         return ResponseEntity.status(503).body(buildBody("alert-service", request));
+    }
+
+    @RequestMapping("/audit")
+    public ResponseEntity<Map<String, Object>> auditFallback(ServerHttpRequest request) {
+        return ResponseEntity.status(503).body(buildBody("audit-service", request));
     }
 
     private Map<String, Object> buildBody(String service, ServerHttpRequest request) {

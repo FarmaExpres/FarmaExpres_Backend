@@ -113,6 +113,16 @@ spring:
                     fallbackUri: forward:/fallback/alerts
               # End-HU-JFBM-001-dev
 
+            - id: audit-route
+              uri: http://audit-service:8084
+              predicates:
+                - Path=/api/audit,/api/audit/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: audit-service
+                    fallbackUri: forward:/fallback/audit
+
             - id: reports-route
               uri: http://inventory-service:8082
               predicates:
@@ -148,6 +158,8 @@ resilience4j:
       inventory-service:
         baseConfig: default
       alert-service:
+        baseConfig: default
+      audit-service:
         baseConfig: default
 # End-HU-JFBM-001-dev
 

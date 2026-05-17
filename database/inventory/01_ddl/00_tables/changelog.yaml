@@ -55,3 +55,17 @@ databaseChangeLog:
             path: ../../../05_rollbacks/01_ddl/00_tables/004_allow_nullable_product_expirationdate.rollback.sql
             relativeToChangelogFile: true
             stripComments: false
+  - changeSet:
+      id: inventory-005-add-reviewed-motion-status
+      author: System
+      comment: Agrega estado REVIEWED para movimientos revisados por auditoria.
+      changes:
+        - sqlFile:
+            path: 005_add_reviewed_motion_status.sql
+            relativeToChangelogFile: true
+            stripComments: false
+      rollback:
+        - sqlFile:
+            path: ../../../05_rollbacks/01_ddl/00_tables/005_add_reviewed_motion_status.rollback.sql
+            relativeToChangelogFile: true
+            stripComments: false
