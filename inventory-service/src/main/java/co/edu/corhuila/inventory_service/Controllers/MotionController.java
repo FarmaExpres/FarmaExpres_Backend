@@ -6,6 +6,7 @@ import co.edu.corhuila.inventory_service.Dto.FefoConsumeRequest;
 import co.edu.corhuila.inventory_service.Dto.InventoryEntryRequest;
 import co.edu.corhuila.inventory_service.Dto.InventoryEntryResponse;
 import co.edu.corhuila.inventory_service.Dto.InventoryExitRequest;
+import co.edu.corhuila.inventory_service.Dto.InventoryAuditStatusRequest;
 import co.edu.corhuila.inventory_service.Dto.MotionResponse;
 import co.edu.corhuila.inventory_service.Dto.MovementExecutionResponse;
 import co.edu.corhuila.inventory_service.Dto.MovementRequest;
@@ -13,6 +14,8 @@ import co.edu.corhuila.inventory_service.Dto.UserActivityReportResponse;
 import co.edu.corhuila.inventory_service.Service.MotionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -34,6 +37,19 @@ public class MotionController {
     @GetMapping({"/api/movements", "/api/motions", "/api/Motion"})
     public ResponseEntity<List<MotionResponse>> listMotion() {
         return ResponseEntity.ok(motionService.listMotion());
+    }
+
+    @GetMapping("/api/movements/{id}")
+    public ResponseEntity<MotionResponse> getMotion(@PathVariable Long id) {
+        return ResponseEntity.ok(motionService.getMotion(id));
+    }
+
+    @PatchMapping("/api/movements/{id}/audit-status")
+    public ResponseEntity<MotionResponse> updateAuditStatus(
+            @PathVariable Long id,
+            @RequestBody InventoryAuditStatusRequest request
+    ) {
+        return ResponseEntity.ok(motionService.updateAuditStatus(id, request));
     }
 
     @GetMapping("/api/movements/filter-by-user")

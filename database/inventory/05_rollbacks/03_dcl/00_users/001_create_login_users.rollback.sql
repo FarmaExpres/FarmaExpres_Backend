@@ -1,0 +1,5 @@
+REVOKE farmaexpres_inventory_app FROM farmaexpres_inventory_app_user;
+REVOKE farmaexpres_inventory_readonly FROM farmaexpres_inventory_read_user;
+
+DROP ROLE IF EXISTS farmaexpres_inventory_app_user;
+DROP ROLE IF EXISTS farmaexpres_inventory_read_user;

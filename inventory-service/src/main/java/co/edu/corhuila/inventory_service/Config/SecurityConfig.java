@@ -79,6 +79,8 @@ public class SecurityConfig {
                         .hasAnyRole("ADMIN", "AUDITOR")
                         .requestMatchers(HttpMethod.GET, "/api/movements/filter-by-user")
                         .hasAnyRole("ADMIN", "AUDITOR")
+                        .requestMatchers(HttpMethod.PATCH, "/api/movements/*/audit-status")
+                        .hasRole("AUDITOR")
 
                         // Legacy aliases for movements (kept restricted to reporting roles)
                         .requestMatchers(HttpMethod.GET, "/api/motions/**")
