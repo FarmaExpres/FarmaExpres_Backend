@@ -123,6 +123,16 @@ spring:
                     name: audit-service
                     fallbackUri: forward:/fallback/audit
 
+            - id: predictions-route
+              uri: ${PREDICTION_SERVICE_URL:http://prediction-service:8000}
+              predicates:
+                - Path=/api/predictions,/api/predictions/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: prediction-service
+                    fallbackUri: forward:/fallback/predictions
+
             - id: reports-route
               uri: http://inventory-service:8082
               predicates:
@@ -160,6 +170,8 @@ resilience4j:
       alert-service:
         baseConfig: default
       audit-service:
+        baseConfig: default
+      prediction-service:
         baseConfig: default
 # End-HU-JFBM-001-dev
 
