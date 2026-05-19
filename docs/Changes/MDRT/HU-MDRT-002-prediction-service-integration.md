@@ -1,4 +1,4 @@
-# HU-MDRT-001 - Integración de prediction-service
+# HU-MDRT-002 - Integración de prediction-service
 
 ## Contexto
 
@@ -16,6 +16,7 @@ FarmaExpres incorporó un microservicio Python con MongoDB para análisis predic
   - `GET /api/inventory/analytics/snapshot`
 - El contrato entrega productos activos, lotes asociados y movimientos históricos para análisis.
 - El endpoint de snapshot queda protegido para roles `ADMIN` y `AUDITOR`.
+- La trazabilidad de este módulo inicia en `HU-MDRT-002` porque `HU-MDRT-001` ya corresponde a control de concurrencia de inventario.
 
 ## Flujo esperado
 
@@ -51,3 +52,10 @@ Frontend React
 - pruebas unitarias de `inventory-service`;
 - verificación de ruta por gateway con token válido;
 - fallback del gateway si `prediction-service` no está disponible.
+
+## Validación local realizada
+
+- `GET /api/inventory/analytics/snapshot` respondió productos, lotes y movimientos desde `inventory-service`.
+- `POST /api/predictions/ingest` respondió 200 por el gateway.
+- `POST /api/predictions/recalculate` respondió 200 por el gateway.
+- La sincronización integrada dejó 130 registros crudos, 130 registros limpios, 11 predicciones, 10 productos en riesgo alto y 1 producto agotado.
