@@ -57,6 +57,8 @@ public class SecurityConfig {
                         .hasAnyRole("ADMIN", "AUDITOR", "FARMACEUTICO")
                         .requestMatchers(HttpMethod.GET, "/api/inventory/reports/**")
                         .hasAnyRole("ADMIN", "AUDITOR", "FARMACEUTICO")
+                        .requestMatchers(HttpMethod.GET, "/api/inventory/analytics/**")
+                        .hasAnyRole("ADMIN", "AUDITOR")
 
                         // Administrative product management: includes inactive products
                         .requestMatchers(HttpMethod.GET, "/api/products/all")
@@ -114,4 +116,3 @@ public class SecurityConfig {
         return http.build();
     }
 }
-
