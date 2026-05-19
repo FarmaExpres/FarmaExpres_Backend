@@ -46,10 +46,10 @@ pipeline {
         stage('Pruebas Java') {
             steps {
                 script {
-                    runInDir('auth-service', './mvnw test', 'mvnw.cmd test')
-                    runInDir('inventory-service', './mvnw test', 'mvnw.cmd test')
-                    runInDir('api-gateway', './mvnw test', 'mvnw.cmd test')
-                    runInDir('audit-service', './mvnw test', 'mvnw.cmd test')
+                    runInDir('auth-service', 'sh mvnw test', 'mvnw.cmd test')
+                    runInDir('inventory-service', 'sh mvnw test', 'mvnw.cmd test')
+                    runInDir('api-gateway', 'sh mvnw test', 'mvnw.cmd test')
+                    runInDir('audit-service', 'sh mvnw test', 'mvnw.cmd test')
                 }
             }
             post {
