@@ -194,6 +194,7 @@ services:
       - "${GATEWAY_PORT:-8080}:8080"
     environment:
       JWT_SECRET: ${JWT_SECRET:-mi_clave_super_secreta_ultra_segura_de_256_bits_minimo_1234567890}
+      PREDICTION_SERVICE_URL: ${PREDICTION_SERVICE_URL:-http://prediction-service:8000}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s
