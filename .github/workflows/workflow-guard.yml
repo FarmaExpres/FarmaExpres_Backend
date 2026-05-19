@@ -23,18 +23,7 @@ jobs:
 
       - name: Determine changed workflow files
         id: changes
-              if [[ "$file" == ".github/workflows/workflow-guard.yml" ]]; then
-                tmp_file=$(mktemp)
-                # Skip the patterns block to prevent self-matching.
-                awk 'BEGIN{skip=0} /patterns=\(/{skip=1} skip==0{print} /^\s*\)/{skip=0}' "$file" > "$tmp_file"
-                if grep -nE "$pattern" "$tmp_file"; then
-                  hit=1
-                fi
-                rm -f "$tmp_file"
-              else
-                if grep -nE "$pattern" "$file"; then
-                  hit=1
-                fi
+        shell: bash
         run: |
           set -euo pipefail
 
@@ -79,8 +68,18 @@ jobs:
             [[ -z "$file" ]] && continue
             echo "Scanning $file"
             for pattern in "${patterns[@]}"; do
-              if grep -nE "$pattern" "$file"; then
-                hit=1
+              if [[ "$file" == ".github/workflows/workflow-guard.yml" ]]; then
+                tmp_file=$(mktemp)
+                # Skip the patterns block to prevent self-matching.
+                awk 'BEGIN{skip=0} /patterns=\(/{skip=1} skip==0{print} /^[[:space:]]*\)/{skip=0}' "$file" > "$tmp_file"
+                if grep -nE "$pattern" "$tmp_file"; then
+                  hit=1
+                fi
+                rm -f "$tmp_file"
+              else
+                if grep -nE "$pattern" "$file"; then
+                  hit=1
+                fi
               fi
             done
           done <<< "${{ steps.changes.outputs.files }}"
