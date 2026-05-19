@@ -1,0 +1,79 @@
+name: Workflow Guard
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/**"
+  push:
+    paths:
+      - ".github/workflows/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scan-workflows:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine changed workflow files
+        id: changes
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          changed_files=""
+          if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
+            git fetch origin "${GITHUB_BASE_REF}" --depth=1
+            changed_files=$(git diff --name-only "origin/${GITHUB_BASE_REF}"...HEAD -- .github/workflows/ || true)
+          elif [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
+            changed_files=$(git diff --name-only "${GITHUB_EVENT_BEFORE}" "${GITHUB_SHA}" -- .github/workflows/ || true)
+          else
+            changed_files=$(git ls-files .github/workflows/ || true)
+          fi
+
+          echo "files<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$changed_files" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Scan workflow content for dangerous commands
+        if: steps.changes.outputs.files != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Add or adjust patterns as needed for your org's security policy.
+          patterns=(
+            'curl[^\n]*-X[[:space:]]*DELETE'
+            'wget[^\n]*--method[[:space:]]*DELETE'
+            'gh[[:space:]]+api[[:space:]]+.*-X[[:space:]]*DELETE'
+            'gh[[:space:]]+repo[[:space:]]+delete'
+            'delete[[:space:]]+repository'
+            'DELETE[[:space:]]+/repos/'
+            'repos/[^[:space:]]+/[^[:space:]]+/actions/workflows/.*/disable'
+          )
+
+          hit=0
+          while IFS= read -r file; do
+            [[ -z "$file" ]] && continue
+            echo "Scanning $file"
+            for pattern in "${patterns[@]}"; do
+              if grep -nE "$pattern" "$file"; then
+                hit=1
+              fi
+            done
+          done <<< "${{ steps.changes.outputs.files }}"
+
+          if [[ $hit -ne 0 ]]; then
+            echo "Dangerous command detected in workflow file(s)."
+            exit 1
+          fi
+
+      - name: Scan complete
+        if: steps.changes.outputs.files == ''
+        run: echo "No workflow files changed."
