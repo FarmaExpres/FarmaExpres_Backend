@@ -32,6 +32,11 @@ public class FallbackController {
         return ResponseEntity.status(503).body(buildBody("audit-service", request));
     }
 
+    @RequestMapping("/predictions")
+    public ResponseEntity<Map<String, Object>> predictionsFallback(ServerHttpRequest request) {
+        return ResponseEntity.status(503).body(buildBody("prediction-service", request));
+    }
+
     private Map<String, Object> buildBody(String service, ServerHttpRequest request) {
         String requestId = request.getHeaders().getFirst("X-Request-Id");
         return Map.of(
