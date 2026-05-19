@@ -32,7 +32,12 @@ jobs:
             git fetch origin "${GITHUB_BASE_REF}" --depth=1
             changed_files=$(git diff --name-only "origin/${GITHUB_BASE_REF}"...HEAD -- .github/workflows/ || true)
           elif [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
-            changed_files=$(git diff --name-only "${GITHUB_EVENT_BEFORE}" "${GITHUB_SHA}" -- .github/workflows/ || true)
+            if [[ -n "${GITHUB_EVENT_BEFORE:-}" ]]; then
+              changed_files=$(git diff --name-only "${GITHUB_EVENT_BEFORE}" "${GITHUB_SHA}" -- .github/workflows/ || true)
+            else
+              # Initial push event does not provide GITHUB_EVENT_BEFORE.
+              changed_files=$(git ls-files .github/workflows/ || true)
+            fi
           else
             changed_files=$(git ls-files .github/workflows/ || true)
           fi
