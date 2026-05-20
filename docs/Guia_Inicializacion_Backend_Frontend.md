@@ -15,7 +15,14 @@ Desde la carpeta donde quieras clonar:
 ```bash
 git clone <URL_DEL_REPO_BACKEND>
 cd FarmaExpres_Backend
-docker compose up -d --build
+docker compose --env-file .env.dev up -d --build
+```
+
+Para `qa` o `main`, cambiar el archivo de entorno:
+
+```bash
+docker compose --env-file .env.qa up -d --build
+docker compose --env-file .env.main up -d --build
 ```
 
 Servicios esperados:
@@ -83,28 +90,61 @@ Si es correcto, retorna token JWT. Usar en headers:
 Este backend usa volumen Docker para PostgreSQL (`postgres_data`), por lo tanto:
 
 - `docker compose down` -> **NO** borra datos.
-- `docker compose up -d` -> recupera datos existentes.
+- `docker compose --env-file .env.dev up -d` -> recupera datos existentes en desarrollo.
 
 Para reiniciar todo desde cero (elimina BD y vuelve a sembrar):
 
 ```bash
 docker compose down -v
-docker compose up -d --build
+docker compose --env-file .env.dev up -d --build
 ```
 
 ---
 
-## 6) Conectar frontend
+## 6) Levantar microservicio predictivo NoSQL
+
+El módulo `Predicciones` del frontend necesita que el microservicio `prediction-service` esté activo y conectado a la red Docker del backend.
+
+Desde el repositorio del microservicio:
+
+```bash
+cd ../FarmaExpres-Micro-NoSQL
+docker compose --env-file .env.dev up -d --build
+```
+
+Puertos esperados en desarrollo:
+
+- API directa de diagnóstico: `http://localhost:8085`
+- Frontend auxiliar del microservicio: `http://localhost:5174`
+- MongoDB para Compass: `mongodb://localhost:27017`
+
+Para otros ambientes:
+
+```bash
+docker compose --env-file .env.qa up -d --build
+docker compose --env-file .env.main up -d --build
+```
+
+El archivo `.env` del microservicio debe apuntar a la red backend del mismo ambiente:
+
+- `dev`: `BACKEND_NETWORK=farmaexpres-dev_default`
+- `qa`: `BACKEND_NETWORK=farmaexpres-qa_default`
+- `main`: `BACKEND_NETWORK=farmaexpres-main_default`
+
+---
+
+## 7) Conectar frontend
 
 ### Flujo oficial (sin token manual)
 
 El frontend ya autentica por pantalla de login, por lo tanto:
 
-1. Levantar backend (`docker compose up -d --build`).
-2. Levantar frontend (`npm run dev`).
-3. Iniciar sesion desde el formulario del frontend con un usuario valido (ADMIN, AUDITOR o FARMACEUTICO).
-4. El frontend recibe y guarda el JWT automaticamente desde `POST /api/auth/login`.
-5. Con esa sesion, el acceso a modulos y endpoints se habilita segun rol.
+1. Levantar backend (`docker compose --env-file .env.dev up -d --build`).
+2. Levantar microservicio predictivo si se va a usar el módulo de predicciones.
+3. Levantar frontend (`npm run dev` o Docker desde `FarmaExpres-Frontend/frontend`).
+4. Iniciar sesión desde el formulario del frontend con un usuario válido (ADMIN, AUDITOR o FARMACEUTICO).
+5. El frontend recibe y guarda el JWT automáticamente desde `POST /api/auth/login`.
+6. Con esa sesión, el acceso a módulos y endpoints se habilita según rol.
 
 Consumo oficial desde frontend:
 - Base URL backend: `http://localhost:8080`
@@ -115,16 +155,25 @@ Si el frontend tiene proxy configurado, debe apuntar al gateway:
 - `/api/products`, `/api/movements` -> `http://localhost:8080`
 - `/api/movements/entrance`, `/api/movements/exit`, `/api/movements/updated` -> `http://localhost:8080`
 - `/api/alerts` -> `http://localhost:8080`
+- `/api/predictions` -> `http://localhost:8080`
 
 Nota:
 - Ya no se requiere configurar `VITE_DEV_TOKEN` manualmente para operar el flujo normal.
 
 ---
 
-## 7) Endpoints principales
+## 8) Endpoints principales
 
 - Auth/Login:
   - `POST /api/auth/login`
+
+- Predicciones:
+  - `GET /api/predictions/health`
+  - `POST /api/predictions/ingest`
+  - `POST /api/predictions/clean`
+  - `POST /api/predictions/train`
+  - `POST /api/predictions/recalculate`
+  - `GET /api/predictions`
 
 - Usuarios:
   - `GET /api/users`
@@ -183,7 +232,7 @@ Uso permitido en frontend:
 
 - Si hay conflicto por datos viejos y quieres iniciar limpio:
   - `docker compose down -v`
-  - `docker compose up -d --build`
+  - `docker compose --env-file .env.dev up -d --build`
 
 - Si el frontend muestra pantalla de login pero no entra:
   - Verificar credenciales de seed en la seccion 3.
