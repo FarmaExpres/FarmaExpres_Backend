@@ -21,15 +21,14 @@ pipeline {
                     env.ENV_FILE = ''
 
                     def branchName = (env.BRANCH_NAME ?: env.GIT_BRANCH ?: '').replaceFirst('^origin/', '').trim()
-                    def branchKey = branchName.toLowerCase()
 
-                    if (branchKey == 'develop') {
+                    if (branchName.equalsIgnoreCase('Develop')) {
                         env.ENV_FILE = '.env.dev'
                         env.SHOULD_DEPLOY = 'true'
-                    } else if (branchKey == 'qa') {
+                    } else if (branchName.equalsIgnoreCase('QA')) {
                         env.ENV_FILE = '.env.qa'
                         env.SHOULD_DEPLOY = 'true'
-                    } else if (branchKey == 'main') {
+                    } else if (branchName.equalsIgnoreCase('main')) {
                         env.ENV_FILE = '.env.main'
                         env.SHOULD_DEPLOY = 'true'
                     } else {
@@ -38,6 +37,7 @@ pipeline {
 
                     echo "Pipeline: ${env.CI_NAME}"
                     echo "Rama: ${branchName}"
+                    echo "Rama normalizada: ${branchName.toLowerCase()}"
                     echo "Despliegue habilitado: ${env.SHOULD_DEPLOY}"
                     if (env.SHOULD_DEPLOY == 'true') {
                         echo "Archivo de ambiente: ${env.ENV_FILE}"
