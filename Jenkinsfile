@@ -8,7 +8,6 @@ pipeline {
     }
 
     environment {
-        ENV_FILE = ''
         CI_NAME = 'Jenkins / FarmaExpres Backend CI'
     }
 
@@ -16,20 +15,19 @@ pipeline {
         stage('Detectar ambiente') {
             steps {
                 script {
-                    env.ENV_FILE = ''
-
                     def branchName = getBranchName()
                     def branchKey = getBranchKey()
+                    def envFile = ''
                     def shouldDeploy = false
 
                     if (branchKey.contains('develop')) {
-                        env.ENV_FILE = '.env.dev'
+                        envFile = '.env.dev'
                         shouldDeploy = true
                     } else if (branchKey.contains('qa')) {
-                        env.ENV_FILE = '.env.qa'
+                        envFile = '.env.qa'
                         shouldDeploy = true
                     } else if (branchKey.contains('main')) {
-                        env.ENV_FILE = '.env.main'
+                        envFile = '.env.main'
                         shouldDeploy = true
                     } else {
                         echo "Rama de trabajo o Pull Request: ${branchName}. Solo se ejecutan pruebas."
@@ -40,7 +38,7 @@ pipeline {
                     echo "Rama normalizada: ${branchKey}"
                     echo "Despliegue habilitado: ${shouldDeploy}"
                     if (shouldDeploy) {
-                        echo "Archivo de ambiente: ${env.ENV_FILE}"
+                        echo "Archivo de ambiente: ${envFile}"
                     }
                 }
             }
@@ -75,22 +73,23 @@ pipeline {
             steps {
                 script {
                     def branchKey = getBranchKey()
+                    def envFile = ''
 
                     if (branchKey.contains('develop')) {
-                        env.ENV_FILE = '.env.dev'
+                        envFile = '.env.dev'
                     } else if (branchKey.contains('qa')) {
-                        env.ENV_FILE = '.env.qa'
+                        envFile = '.env.qa'
                     } else if (branchKey.contains('main')) {
-                        env.ENV_FILE = '.env.main'
+                        envFile = '.env.main'
                     } else {
                         echo "Despliegue omitido para rama ${getBranchName()}"
                         return
                     }
 
-                    echo "Desplegando ambiente con ${env.ENV_FILE}"
+                    echo "Desplegando ambiente con ${envFile}"
                     runCommand(
-                        "docker compose --env-file ${env.ENV_FILE} up -d --build",
-                        "docker compose --env-file ${env.ENV_FILE} up -d --build"
+                        "if docker compose version >/dev/null 2>&1; then docker compose --env-file ${envFile} up -d --build; else docker-compose --env-file ${envFile} up -d --build; fi",
+                        "docker compose --env-file ${envFile} up -d --build"
                     )
                 }
             }
