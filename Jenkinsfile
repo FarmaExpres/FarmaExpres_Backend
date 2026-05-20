@@ -20,21 +20,24 @@ pipeline {
                     env.SHOULD_DEPLOY = 'false'
                     env.ENV_FILE = ''
 
-                    if (env.BRANCH_NAME == 'Develop') {
+                    def branchName = (env.BRANCH_NAME ?: env.GIT_BRANCH ?: '').replaceFirst('^origin/', '').trim()
+                    def branchKey = branchName.toLowerCase()
+
+                    if (branchKey == 'develop') {
                         env.ENV_FILE = '.env.dev'
                         env.SHOULD_DEPLOY = 'true'
-                    } else if (env.BRANCH_NAME == 'QA') {
+                    } else if (branchKey == 'qa') {
                         env.ENV_FILE = '.env.qa'
                         env.SHOULD_DEPLOY = 'true'
-                    } else if (env.BRANCH_NAME == 'main') {
+                    } else if (branchKey == 'main') {
                         env.ENV_FILE = '.env.main'
                         env.SHOULD_DEPLOY = 'true'
                     } else {
-                        echo "Rama de trabajo o Pull Request: ${env.BRANCH_NAME}. Solo se ejecutan pruebas."
+                        echo "Rama de trabajo o Pull Request: ${branchName}. Solo se ejecutan pruebas."
                     }
 
                     echo "Pipeline: ${env.CI_NAME}"
-                    echo "Rama: ${env.BRANCH_NAME}"
+                    echo "Rama: ${branchName}"
                     echo "Despliegue habilitado: ${env.SHOULD_DEPLOY}"
                     if (env.SHOULD_DEPLOY == 'true') {
                         echo "Archivo de ambiente: ${env.ENV_FILE}"
