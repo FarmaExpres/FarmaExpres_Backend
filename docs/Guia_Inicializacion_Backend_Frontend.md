@@ -101,21 +101,18 @@ docker compose --env-file .env.dev up -d --build
 
 ---
 
-## 6) Levantar microservicio predictivo NoSQL
+## 6) Microservicio predictivo NoSQL
 
-El módulo `Predicciones` del frontend necesita que el microservicio `prediction-service` esté activo y conectado a la red Docker del backend.
-
-Desde el repositorio del microservicio:
+El módulo `Predicciones` del frontend necesita que `prediction-service` y MongoDB estén activos. Estos contenedores ya se levantan desde el backend:
 
 ```bash
-cd ../FarmaExpres-Micro-NoSQL
+cd FarmaExpres_Backend
 docker compose --env-file .env.dev up -d --build
 ```
 
 Puertos esperados en desarrollo:
 
 - API directa de diagnóstico: `http://localhost:8085`
-- Frontend auxiliar del microservicio: `http://localhost:5174`
 - MongoDB para Compass: `mongodb://localhost:27017`
 
 Para otros ambientes:
