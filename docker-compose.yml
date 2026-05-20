@@ -10,7 +10,6 @@ services:
       - "${POSTGRES_PORT:-5433}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/bootstrap.sql:/docker-entrypoint-initdb.d/bootstrap.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 30s
@@ -18,14 +17,14 @@ services:
       retries: 5
 
   postgres-init:
-    image: postgres:16
+    build:
+      context: ./database
+      dockerfile: Dockerfile.postgres-init
     depends_on:
       postgres:
         condition: service_healthy
     environment:
       PGPASSWORD: ${POSTGRES_PASSWORD:-1234}
-    volumes:
-      - ./database/bootstrap.sql:/workspace/bootstrap.sql
     command:
       - psql
       - -h
@@ -40,12 +39,12 @@ services:
       - /workspace/bootstrap.sql
 
   liquibase-auth:
-    image: liquibase/liquibase:4.31
+    build:
+      context: ./database
+      dockerfile: Dockerfile.liquibase
     depends_on:
       postgres-init:
         condition: service_completed_successfully
-    volumes:
-      - ./database:/workspace/database
     working_dir: /workspace/database/auth
     environment:
       AUTH_DB_PASSWORD: ${AUTH_DB_PASSWORD:-auth_app_dev_password}
@@ -60,12 +59,12 @@ services:
       - update
 
   liquibase-inventory:
-    image: liquibase/liquibase:4.31
+    build:
+      context: ./database
+      dockerfile: Dockerfile.liquibase
     depends_on:
       postgres-init:
         condition: service_completed_successfully
-    volumes:
-      - ./database:/workspace/database
     working_dir: /workspace/database/inventory
     environment:
       INVENTORY_DB_PASSWORD: ${INVENTORY_DB_PASSWORD:-inventory_app_dev_password}
@@ -80,12 +79,12 @@ services:
       - update
 
   liquibase-audit:
-    image: liquibase/liquibase:4.31
+    build:
+      context: ./database
+      dockerfile: Dockerfile.liquibase
     depends_on:
       postgres-init:
         condition: service_completed_successfully
-    volumes:
-      - ./database:/workspace/database
     working_dir: /workspace/database/audit
     environment:
       AUDIT_DB_PASSWORD: ${AUDIT_DB_PASSWORD:-audit_app_dev_password}
