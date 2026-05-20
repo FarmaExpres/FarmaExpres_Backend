@@ -43,15 +43,12 @@ Los microservicios estan configurados con `ddl-auto: validate` para asegurar que
 
 ## Despliegue completo con microservicio predictivo
 
-El backend principal, el microservicio NoSQL y el frontend viven en repositorios separados. Para una ejecucion integrada se debe respetar este orden, porque `prediction-service` se conecta a la red Docker del backend y el frontend consume todo por el `api-gateway`.
+El backend principal ya incluye el runtime del microservicio predictivo. Al levantar este repositorio con Docker Compose se crean también `mongo` y `prediction-service`; el frontend consume todo por el `api-gateway`.
 
 ### Dev
 
 ```bash
 cd FarmaExpres_Backend
-docker compose --env-file .env.dev up -d --build
-
-cd ../FarmaExpres-Micro-NoSQL
 docker compose --env-file .env.dev up -d --build
 
 cd ../FarmaExpres-Frontend/frontend
@@ -64,9 +61,6 @@ docker compose --env-file .env.dev up -d --build
 cd FarmaExpres_Backend
 docker compose --env-file .env.qa up -d --build
 
-cd ../FarmaExpres-Micro-NoSQL
-docker compose --env-file .env.qa up -d --build
-
 cd ../FarmaExpres-Frontend/frontend
 docker compose --env-file .env.qa up -d --build
 ```
@@ -77,14 +71,11 @@ docker compose --env-file .env.qa up -d --build
 cd FarmaExpres_Backend
 docker compose --env-file .env.main up -d --build
 
-cd ../FarmaExpres-Micro-NoSQL
-docker compose --env-file .env.main up -d --build
-
 cd ../FarmaExpres-Frontend/frontend
 docker compose --env-file .env.main up -d --build
 ```
 
-Si el frontend o el microservicio viven en otro repositorio local, deben respetar la misma estrategia de puertos, nombre de proyecto Docker y red por ambiente.
+El repositorio `FarmaExpres-Micro-NoSQL` queda como referencia histórica y documentación especializada, pero para ejecutar el sistema integrado basta con Backend + Frontend.
 
 ## Configuracion de Entornos
 
@@ -97,8 +88,9 @@ Los puertos internos son fijos para comunicacion entre contenedores:
 - `inventory-service`: `8082`
 - `alert-service`: `8083`
 - `audit-service`: `8084`
-- `postgres`: `5432`
 - `prediction-service`: `8000` dentro de su propio contenedor
+- `postgres`: `5432`
+- `mongo`: `27017`
 
 Los puertos externos son para acceso desde navegador, Postman, pgAdmin o clientes fuera de Docker:
 
@@ -108,7 +100,8 @@ Los puertos externos son para acceso desde navegador, Postman, pgAdmin o cliente
   - inventory: `8082`
   - alert: `8083`
   - audit: `8084`
-  - prediction-service: `8085` directo desde su repositorio, o `/api/predictions` por gateway
+  - prediction-service: `8085` directo desde este repositorio, o `/api/predictions` por gateway
+  - mongo: `27017`
   - postgres: `5433`
 - **qa**:
   - gateway: `9080`
@@ -116,7 +109,8 @@ Los puertos externos son para acceso desde navegador, Postman, pgAdmin o cliente
   - inventory: `9082`
   - alert: `9083`
   - audit: `9084`
-  - prediction-service: `9085` directo desde su repositorio, o `/api/predictions` por gateway
+  - prediction-service: `9085` directo desde este repositorio, o `/api/predictions` por gateway
+  - mongo: `37017`
   - postgres: `6433`
 - **main**:
   - gateway: `10080`
@@ -124,18 +118,17 @@ Los puertos externos son para acceso desde navegador, Postman, pgAdmin o cliente
   - inventory: `10082`
   - alert: `10083`
   - audit: `10084`
-  - prediction-service: `10085` directo desde su repositorio, o `/api/predictions` por gateway
+  - prediction-service: `10085` directo desde este repositorio, o `/api/predictions` por gateway
+  - mongo: `47017`
   - postgres: `7433`
 
 ## Red Interna
 
 Dentro de la red de Docker, los servicios se comunican usando nombres de servicio y puertos internos. El `api-gateway` se comunica con los demas servicios por direcciones como `http://auth-service:8081`.
 
-Para el servicio predictivo, el repositorio `FarmaExpres-Micro-NoSQL` debe unirse a la red Docker del backend:
-
-- `dev`: `BACKEND_NETWORK=farmaexpres-dev_default`
-- `qa`: `BACKEND_NETWORK=farmaexpres-qa_default`
-- `main`: `BACKEND_NETWORK=farmaexpres-main_default`
+Regla práctica:
+- puertos externos: acceso desde navegador, Postman, pgAdmin o clientes fuera de Docker
+- puertos internos: comunicación entre contenedores del mismo ambiente
 
 El gateway usa `PREDICTION_SERVICE_URL`, por defecto `http://prediction-service:8000`.
 
