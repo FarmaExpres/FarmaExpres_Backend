@@ -41,6 +41,59 @@ El proyecto utiliza Liquibase para gestionar las migraciones de la base de datos
 -   `database/inventory/`: Contiene las migraciones para el servicio de inventario.
 -   `database/audit/`: Contiene las migraciones para el servicio de auditoría.
 
+Para levantar solo el backend de un ambiente:
+
+```bash
+docker compose --env-file .env.dev up -d --build
+docker compose --env-file .env.qa up -d --build
+docker compose --env-file .env.main up -d --build
+```
+
+## Despliegue completo con microservicio predictivo
+
+El backend principal, el microservicio NoSQL y el frontend viven en repositorios separados. Para una ejecución integrada se debe respetar este orden, porque `prediction-service` se conecta a la red Docker del backend y el frontend consume todo por el `api-gateway`.
+
+### Dev
+
+```bash
+cd FarmaExpres_Backend
+docker compose --env-file .env.dev up -d --build
+
+cd ../FarmaExpres-Micro-NoSQL
+docker compose --env-file .env.dev up -d --build
+
+cd ../FarmaExpres-Frontend/frontend
+docker compose --env-file .env.dev up -d --build
+```
+
+### QA
+
+```bash
+cd FarmaExpres_Backend
+docker compose --env-file .env.qa up -d --build
+
+cd ../FarmaExpres-Micro-NoSQL
+docker compose --env-file .env.qa up -d --build
+
+cd ../FarmaExpres-Frontend/frontend
+docker compose --env-file .env.qa up -d --build
+```
+
+### Main
+
+```bash
+cd FarmaExpres_Backend
+docker compose --env-file .env.main up -d --build
+
+cd ../FarmaExpres-Micro-NoSQL
+docker compose --env-file .env.main up -d --build
+
+cd ../FarmaExpres-Frontend/frontend
+docker compose --env-file .env.main up -d --build
+```
+
+Si el frontend o el microservicio viven en otro repositorio local, deben respetar la misma estrategia de puertos, nombre de proyecto Docker y red por ambiente.
+
 Los microservicios están configurados con `ddl-auto: validate` para asegurar que los cambios en el esquema se gestionen exclusivamente a través de Liquibase.
 
 ## Configuración de Entornos
@@ -88,7 +141,17 @@ Dentro de la red de Docker, los servicios se comunican utilizando sus puertos in
 
 El `api-gateway` siempre se comunicará con los demás servicios a través de estos puertos internos (ej: `http://auth-service:8081`).
 
-Para el servicio predictivo, el repositorio `FarmaExpres-Micro-NoSQL` debe unirse a la red Docker del backend mediante `BACKEND_NETWORK=farmaexpres-dev_default` en desarrollo. El gateway usa `PREDICTION_SERVICE_URL`, por defecto `http://prediction-service:8000`.
+Regla práctica:
+- puertos externos: acceso desde navegador, Postman, pgAdmin o clientes fuera de Docker
+- puertos internos: comunicación entre contenedores del mismo ambiente
+
+Para el servicio predictivo, el repositorio `FarmaExpres-Micro-NoSQL` debe unirse a la red Docker del backend:
+
+- `dev`: `BACKEND_NETWORK=farmaexpres-dev_default`
+- `qa`: `BACKEND_NETWORK=farmaexpres-qa_default`
+- `main`: `BACKEND_NETWORK=farmaexpres-main_default`
+
+El gateway usa `PREDICTION_SERVICE_URL`, por defecto `http://prediction-service:8000`.
 
 ## Decisiones de Arquitectura (ADRs)
 
