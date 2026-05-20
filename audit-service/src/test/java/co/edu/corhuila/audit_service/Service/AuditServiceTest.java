@@ -65,7 +65,7 @@ class AuditServiceTest {
         AuditCase existing = auditCase(21L, AuditCaseSource.AUTO, AuditCaseStatus.OPEN);
         when(inventoryClient.getMovement(21L, AUTH)).thenReturn(movement(21L));
         when(auditCaseRepository.findFirstByMovementIdOrderByCreatedAtDesc(21L)).thenReturn(Optional.of(existing));
-        when(auditCaseRepository.save(existing)).thenReturn(existing);
+        when(auditCaseRepository.save(any(AuditCase.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         auditService.createManualCase(request, AUTH);
 

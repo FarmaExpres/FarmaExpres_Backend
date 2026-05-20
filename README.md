@@ -1,55 +1,26 @@
-# FarmaExpres_Backend
+# FarmaExpres Backend
 
-## Base de datos versionada
+## Descripcion General
 
-El proyecto ahora maneja la base de datos con una estructura versionada en `database/`.
-
-- `database/bootstrap.sql` crea las bases `farmaexpres_users` y `farmaexpres_inventory`
-- `database/auth/` contiene las migraciones de autenticacion
-- `database/inventory/` contiene las migraciones de inventario
-- `docker-compose.yml` ejecuta Liquibase antes de levantar `auth-service`, `inventory-service` y `alert-service`
-
-Los microservicios quedaron en modo `ddl-auto: validate` para evitar cambios automaticos sobre el esquema.
+Este repositorio contiene el backend de la aplicacion FarmaExpres, una plataforma de microservicios disenada para gestionar autenticacion, inventario, alertas, auditoria y comunicacion con servicios analiticos.
 
 ## Microservicios
 
-- `api-gateway`: punto de entrada para las peticiones del frontend.
-- `auth-service`: autenticacion y emision de tokens JWT.
-- `inventory-service`: gestion de productos, lotes, entradas, salidas y movimientos.
+- `api-gateway`: punto de entrada unico para las peticiones del frontend. Enruta peticiones, centraliza seguridad y expone integraciones como `/api/predictions`.
+- `auth-service`: autenticacion de usuarios y emision de tokens JWT.
+- `inventory-service`: gestion de productos, lotes, entradas, salidas, movimientos y snapshots analiticos.
 - `alert-service`: alertas operativas de inventario.
 - `audit-service`: auditoria de movimientos e inconsistencias.
 - `prediction-service`: servicio externo en Python y FastAPI. Se expone por el gateway en `/api/predictions` y consume el snapshot analitico de `inventory-service`.
 
-## Puertos por ambiente
+## Empezando
 
-El proyecto ahora soporta puertos distintos para `dev`, `qa` y `main` usando archivos de entorno:
+### Prerrequisitos
 
-- `.env.dev`
-- `.env.qa`
-- `.env.main`
+- Docker
+- Docker Compose v2
 
-Puertos definidos en este repositorio:
-
-- `dev`
-  - gateway: `8080`
-  - auth: `8081`
-  - inventory: `8082`
-  - alert: `8083`
-  - postgres: `5433`
-
-- `qa`
-  - gateway: `9080`
-  - auth: `9081`
-  - inventory: `9082`
-  - alert: `9083`
-  - postgres: `6433`
-
-- `main`
-  - gateway: `10080`
-  - auth: `10081`
-  - inventory: `10082`
-  - alert: `10083`
-  - postgres: `7433`
+### Ejecucion
 
 Para levantar solo el backend de un ambiente:
 
@@ -59,9 +30,20 @@ docker compose --env-file .env.qa up -d --build
 docker compose --env-file .env.main up -d --build
 ```
 
+## Base de Datos
+
+El proyecto utiliza Liquibase para gestionar las migraciones de la base de datos de forma versionada.
+
+- `database/bootstrap.sql`: crea la base de datos inicial.
+- `database/auth/`: migraciones del servicio de autenticacion.
+- `database/inventory/`: migraciones del servicio de inventario.
+- `database/audit/`: migraciones del servicio de auditoria.
+
+Los microservicios estan configurados con `ddl-auto: validate` para asegurar que los cambios en el esquema se gestionen exclusivamente a traves de Liquibase.
+
 ## Despliegue completo con microservicio predictivo
 
-El backend principal, el microservicio NoSQL y el frontend viven en repositorios separados. Para una ejecución integrada se debe respetar este orden, porque `prediction-service` se conecta a la red Docker del backend y el frontend consume todo por el `api-gateway`.
+El backend principal, el microservicio NoSQL y el frontend viven en repositorios separados. Para una ejecucion integrada se debe respetar este orden, porque `prediction-service` se conecta a la red Docker del backend y el frontend consume todo por el `api-gateway`.
 
 ### Dev
 
@@ -104,28 +86,50 @@ docker compose --env-file .env.main up -d --build
 
 Si el frontend o el microservicio viven en otro repositorio local, deben respetar la misma estrategia de puertos, nombre de proyecto Docker y red por ambiente.
 
-## Gateway y puertos internos
+## Configuracion de Entornos
 
-La estrategia de puertos por ambiente cambia los puertos publicados hacia el host, pero no cambia los puertos internos entre contenedores.
+El proyecto utiliza diferentes puertos para los entornos de `dev`, `qa` y `main` a traves de archivos de entorno.
 
-Eso significa que dentro de Docker:
+Los puertos internos son fijos para comunicacion entre contenedores:
 
-- `auth-service` sigue escuchando en `8081`
-- `inventory-service` sigue escuchando en `8082`
-- `alert-service` sigue escuchando en `8083`
-- `api-gateway` sigue escuchando en `8080`
-- `postgres` sigue escuchando en `5432`
-- `prediction-service` escucha en `8000` dentro de su propio contenedor
+- `api-gateway`: `8080`
+- `auth-service`: `8081`
+- `inventory-service`: `8082`
+- `alert-service`: `8083`
+- `audit-service`: `8084`
+- `postgres`: `5432`
+- `prediction-service`: `8000` dentro de su propio contenedor
 
-Por lo tanto, el gateway no necesita consumir los puertos externos de `dev`, `qa` o `main` para hablar con los otros microservicios cuando todos viven en el mismo `docker compose`.
+Los puertos externos son para acceso desde navegador, Postman, pgAdmin o clientes fuera de Docker:
 
-Ejemplo:
-- el host puede exponer `auth-service` en `9081` para `qa`
-- pero dentro de la red Docker el gateway sigue consumiendo `auth-service:8081`
+- **dev**:
+  - gateway: `8080`
+  - auth: `18081`
+  - inventory: `8082`
+  - alert: `8083`
+  - audit: `8084`
+  - prediction-service: `8085` directo desde su repositorio, o `/api/predictions` por gateway
+  - postgres: `5433`
+- **qa**:
+  - gateway: `9080`
+  - auth: `9081`
+  - inventory: `9082`
+  - alert: `9083`
+  - audit: `9084`
+  - prediction-service: `9085` directo desde su repositorio, o `/api/predictions` por gateway
+  - postgres: `6433`
+- **main**:
+  - gateway: `10080`
+  - auth: `10081`
+  - inventory: `10082`
+  - alert: `10083`
+  - audit: `10084`
+  - prediction-service: `10085` directo desde su repositorio, o `/api/predictions` por gateway
+  - postgres: `7433`
 
-Regla práctica:
-- puertos externos: acceso desde navegador, Postman, pgAdmin o clientes fuera de Docker
-- puertos internos: comunicación entre contenedores del mismo ambiente
+## Red Interna
+
+Dentro de la red de Docker, los servicios se comunican usando nombres de servicio y puertos internos. El `api-gateway` se comunica con los demas servicios por direcciones como `http://auth-service:8081`.
 
 Para el servicio predictivo, el repositorio `FarmaExpres-Micro-NoSQL` debe unirse a la red Docker del backend:
 
@@ -134,3 +138,15 @@ Para el servicio predictivo, el repositorio `FarmaExpres-Micro-NoSQL` debe unirs
 - `main`: `BACKEND_NETWORK=farmaexpres-main_default`
 
 El gateway usa `PREDICTION_SERVICE_URL`, por defecto `http://prediction-service:8000`.
+
+## Decisiones de Arquitectura
+
+Las decisiones de arquitectura importantes se documentan en la carpeta [docs/ADR](docs/ADR/).
+
+## Documentacion de la API
+
+Los contratos de la API y otros documentos relevantes se encuentran en la carpeta `docs/`.
+
+## Pruebas
+
+Cada microservicio incluye su propio conjunto de pruebas. Por ejemplo, el `alert-service` tiene pruebas unitarias y de integracion en su carpeta `tests/`. La estrategia de pruebas general se define en el [ADR-009](docs/ADR/ADR-009-estrategia-pruebas-microservicios.md).
