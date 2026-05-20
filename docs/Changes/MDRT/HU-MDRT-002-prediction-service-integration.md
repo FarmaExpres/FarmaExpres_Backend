@@ -49,9 +49,56 @@ Frontend React
 ## Validaciones esperadas
 
 - `docker compose --env-file .env.dev config --quiet`
+- `docker compose --env-file .env.qa config --quiet`
+- `docker compose --env-file .env.main config --quiet`
 - pruebas unitarias de `inventory-service`;
 - verificación de ruta por gateway con token válido;
 - fallback del gateway si `prediction-service` no está disponible.
+
+## Ejecución integrada por ambiente
+
+El backend no levanta MongoDB ni `prediction-service` por sí solo, porque ese módulo vive en el repositorio `FarmaExpres-Micro-NoSQL`. Para probar la integración completa se deben levantar los tres repositorios en orden.
+
+### Dev
+
+```bash
+cd FarmaExpres_Backend
+docker compose --env-file .env.dev up -d --build
+
+cd ../FarmaExpres-Micro-NoSQL
+docker compose --env-file .env.dev up -d --build
+
+cd ../FarmaExpres-Frontend/frontend
+docker compose --env-file .env.dev up -d --build
+```
+
+### QA
+
+```bash
+cd FarmaExpres_Backend
+docker compose --env-file .env.qa up -d --build
+
+cd ../FarmaExpres-Micro-NoSQL
+docker compose --env-file .env.qa up -d --build
+
+cd ../FarmaExpres-Frontend/frontend
+docker compose --env-file .env.qa up -d --build
+```
+
+### Main
+
+```bash
+cd FarmaExpres_Backend
+docker compose --env-file .env.main up -d --build
+
+cd ../FarmaExpres-Micro-NoSQL
+docker compose --env-file .env.main up -d --build
+
+cd ../FarmaExpres-Frontend/frontend
+docker compose --env-file .env.main up -d --build
+```
+
+La variable clave del microservicio es `BACKEND_NETWORK`, que debe coincidir con la red del backend del mismo ambiente: `farmaexpres-dev_default`, `farmaexpres-qa_default` o `farmaexpres-main_default`.
 
 ## Validación local realizada
 
