@@ -9,7 +9,6 @@ pipeline {
 
     environment {
         ENV_FILE = ''
-        SHOULD_DEPLOY = 'false'
         CI_NAME = 'Jenkins / FarmaExpres Backend CI'
     }
 
@@ -17,21 +16,21 @@ pipeline {
         stage('Detectar ambiente') {
             steps {
                 script {
-                    env.SHOULD_DEPLOY = 'false'
                     env.ENV_FILE = ''
 
-                    def branchName = (env.BRANCH_NAME ?: env.GIT_BRANCH ?: '').replaceFirst('^origin/', '').trim()
-                    def branchKey = branchName.toLowerCase()
+                    def branchName = getBranchName()
+                    def branchKey = getBranchKey()
+                    def shouldDeploy = false
 
                     if (branchKey.contains('develop')) {
                         env.ENV_FILE = '.env.dev'
-                        env.SHOULD_DEPLOY = 'true'
+                        shouldDeploy = true
                     } else if (branchKey.contains('qa')) {
                         env.ENV_FILE = '.env.qa'
-                        env.SHOULD_DEPLOY = 'true'
+                        shouldDeploy = true
                     } else if (branchKey.contains('main')) {
                         env.ENV_FILE = '.env.main'
-                        env.SHOULD_DEPLOY = 'true'
+                        shouldDeploy = true
                     } else {
                         echo "Rama de trabajo o Pull Request: ${branchName}. Solo se ejecutan pruebas."
                     }
@@ -39,8 +38,8 @@ pipeline {
                     echo "Pipeline: ${env.CI_NAME}"
                     echo "Rama: ${branchName}"
                     echo "Rama normalizada: ${branchKey}"
-                    echo "Despliegue habilitado: ${env.SHOULD_DEPLOY}"
-                    if (env.SHOULD_DEPLOY == 'true') {
+                    echo "Despliegue habilitado: ${shouldDeploy}"
+                    if (shouldDeploy) {
                         echo "Archivo de ambiente: ${env.ENV_FILE}"
                     }
                 }
@@ -73,13 +72,22 @@ pipeline {
         }
 
         stage('Desplegar ambiente') {
-            when {
-                expression {
-                    return env.SHOULD_DEPLOY == 'true'
-                }
-            }
             steps {
                 script {
+                    def branchKey = getBranchKey()
+
+                    if (branchKey.contains('develop')) {
+                        env.ENV_FILE = '.env.dev'
+                    } else if (branchKey.contains('qa')) {
+                        env.ENV_FILE = '.env.qa'
+                    } else if (branchKey.contains('main')) {
+                        env.ENV_FILE = '.env.main'
+                    } else {
+                        echo "Despliegue omitido para rama ${getBranchName()}"
+                        return
+                    }
+
+                    echo "Desplegando ambiente con ${env.ENV_FILE}"
                     runCommand(
                         "docker compose --env-file ${env.ENV_FILE} up -d --build",
                         "docker compose --env-file ${env.ENV_FILE} up -d --build"
@@ -97,6 +105,14 @@ pipeline {
             echo "${env.CI_NAME}: FAILED. No se realiza despliegue si las pruebas fallan."
         }
     }
+}
+
+def getBranchName() {
+    return (env.BRANCH_NAME ?: env.GIT_BRANCH ?: '').replaceFirst('^origin/', '').trim()
+}
+
+def getBranchKey() {
+    return getBranchName().toLowerCase()
 }
 
 def runInDir(String directory, String unixCommand, String windowsCommand) {
