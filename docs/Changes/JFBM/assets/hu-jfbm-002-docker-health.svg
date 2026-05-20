@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="650" viewBox="0 0 1100 650" role="img" aria-labelledby="title desc">
+  <title id="title">HU-JFBM-002 estado de servicios Docker</title>
+  <desc id="desc">Resumen visual del estado de servicios Docker Compose para el stack local de FarmaExpres.</desc>
+  <rect width="1100" height="650" fill="#f8fafc"/>
+  <rect x="48" y="42" width="1004" height="560" rx="18" fill="#ffffff" stroke="#d8e2ef"/>
+  <rect x="48" y="42" width="1004" height="96" rx="18" fill="#1d4ed8"/>
+  <text x="88" y="98" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" fill="#ffffff">Verificacion Docker Compose</text>
+  <text x="88" y="166" font-family="Segoe UI, Arial, sans-serif" font-size="19" fill="#334155">Comando: docker compose ps</text>
+  <text x="88" y="202" font-family="Segoe UI, Arial, sans-serif" font-size="19" fill="#334155">Entorno: servicios Docker locales</text>
+
+  <rect x="88" y="245" width="924" height="58" rx="10" fill="#eff6ff" stroke="#bfdbfe"/>
+  <text x="118" y="282" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700" fill="#1e3a8a">Servicio</text>
+  <text x="458" y="282" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700" fill="#1e3a8a">Puerto</text>
+  <text x="658" y="282" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700" fill="#1e3a8a">Estado</text>
+
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="18" fill="#334155">
+    <rect x="88" y="315" width="924" height="54" rx="9" fill="#ffffff" stroke="#e2e8f0"/>
+    <circle cx="675" cy="342" r="8" fill="#16a34a"/>
+    <text x="118" y="348">postgres</text>
+    <text x="458" y="348">5433</text>
+    <text x="695" y="348">healthy</text>
+
+    <rect x="88" y="379" width="924" height="54" rx="9" fill="#ffffff" stroke="#e2e8f0"/>
+    <circle cx="675" cy="406" r="8" fill="#16a34a"/>
+    <text x="118" y="412">auth-service</text>
+    <text x="458" y="412">8081</text>
+    <text x="695" y="412">healthy</text>
+
+    <rect x="88" y="443" width="924" height="54" rx="9" fill="#ffffff" stroke="#e2e8f0"/>
+    <circle cx="675" cy="470" r="8" fill="#16a34a"/>
+    <text x="118" y="476">inventory-service</text>
+    <text x="458" y="476">8082</text>
+    <text x="695" y="476">healthy</text>
+
+    <rect x="88" y="507" width="924" height="54" rx="9" fill="#ffffff" stroke="#e2e8f0"/>
+    <circle cx="675" cy="534" r="8" fill="#16a34a"/>
+    <text x="118" y="540">alert-service</text>
+    <text x="458" y="540">8083</text>
+    <text x="695" y="540">healthy</text>
+
+    <rect x="88" y="571" width="924" height="54" rx="9" fill="#ffffff" stroke="#e2e8f0"/>
+    <circle cx="675" cy="598" r="8" fill="#16a34a"/>
+    <text x="118" y="604">api-gateway</text>
+    <text x="458" y="604">8080</text>
+    <text x="695" y="604">healthy</text>
+  </g>
+</svg>

@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    url: "jdbc:h2:mem:farmaexpres_auth_test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;INIT=CREATE SCHEMA IF NOT EXISTS auth"
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        default_schema: auth
+        hbm2ddl:
+          create_namespaces: true
+    show-sql: false
