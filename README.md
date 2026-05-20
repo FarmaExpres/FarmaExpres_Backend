@@ -1,103 +1,152 @@
 # FarmaExpres Backend
 
-## Descripción General
+## Descripcion General
 
-Este repositorio contiene el backend de la aplicación FarmaExpres, una plataforma de microservicios diseñada para gestionar autenticación, inventario, alertas, auditoría y comunicación con servicios analíticos.
+Este repositorio contiene el backend de la aplicacion FarmaExpres, una plataforma de microservicios disenada para gestionar autenticacion, inventario, alertas, auditoria y comunicacion con servicios analiticos.
 
 ## Microservicios
 
-El backend está compuesto por los siguientes microservicios:
-
--   **api-gateway**: Punto de entrada único para todas las peticiones de los clientes. Enruta las peticiones a los servicios correspondientes y maneja la autenticación y la autorización.
--   **auth-service**: Gestiona la autenticación de usuarios y la generación de tokens JWT.
--   **inventory-service**: Se encarga de la gestión del inventario de productos, incluyendo el control de stock, precios y caducidad.
--   **alert-service**: Genera y gestiona alertas relacionadas con el inventario, como bajo stock o productos a punto de caducar.
--   **audit-service**: Registra y revisa inconsistencias de movimientos de inventario.
--   **prediction-service**: Servicio externo del ecosistema, desarrollado en Python + FastAPI, que se enruta por el gateway en `/api/predictions` y consume datos desde `inventory-service`.
+- `api-gateway`: punto de entrada unico para las peticiones del frontend. Enruta peticiones, centraliza seguridad y expone integraciones como `/api/predictions`.
+- `auth-service`: autenticacion de usuarios y emision de tokens JWT.
+- `inventory-service`: gestion de productos, lotes, entradas, salidas, movimientos y snapshots analiticos.
+- `alert-service`: alertas operativas de inventario.
+- `audit-service`: auditoria de movimientos e inconsistencias.
+- `prediction-service`: servicio externo en Python y FastAPI. Se expone por el gateway en `/api/predictions` y consume el snapshot analitico de `inventory-service`.
 
 ## Empezando
 
 ### Prerrequisitos
 
--   Docker
--   Docker Compose
+- Docker
+- Docker Compose v2
 
-### Ejecución
+### Ejecucion
 
-1.  Clona este repositorio.
-2.  Crea los archivos de entorno necesarios (`.env.dev`, `.env.qa`, `.env.main`) si no existen. Puedes basarte en los puertos definidos más abajo.
-3.  Levanta el entorno deseado con Docker Compose. Por ejemplo, para el entorno de desarrollo:
+Para levantar solo el backend de un ambiente:
 
-    ```bash
-    docker compose --env-file .env.dev up --build
-    ```
+```bash
+docker compose --env-file .env.dev up -d --build
+docker compose --env-file .env.qa up -d --build
+docker compose --env-file .env.main up -d --build
+```
 
 ## Base de Datos
 
 El proyecto utiliza Liquibase para gestionar las migraciones de la base de datos de forma versionada.
 
--   `database/bootstrap.sql`: Crea las bases de datos iniciales.
--   `database/auth/`: Contiene las migraciones para el servicio de autenticación.
--   `database/inventory/`: Contiene las migraciones para el servicio de inventario.
--   `database/audit/`: Contiene las migraciones para el servicio de auditoría.
+- `database/bootstrap.sql`: crea la base de datos inicial.
+- `database/auth/`: migraciones del servicio de autenticacion.
+- `database/inventory/`: migraciones del servicio de inventario.
+- `database/audit/`: migraciones del servicio de auditoria.
 
-Los microservicios están configurados con `ddl-auto: validate` para asegurar que los cambios en el esquema se gestionen exclusivamente a través de Liquibase.
+Los microservicios estan configurados con `ddl-auto: validate` para asegurar que los cambios en el esquema se gestionen exclusivamente a traves de Liquibase.
 
-## Configuración de Entornos
+## Despliegue completo con microservicio predictivo
 
-El proyecto utiliza diferentes puertos para los entornos de `dev`, `qa` y `main` a través de archivos de entorno.
+El backend principal, el microservicio NoSQL y el frontend viven en repositorios separados. Para una ejecucion integrada se debe respetar este orden, porque `prediction-service` se conecta a la red Docker del backend y el frontend consume todo por el `api-gateway`.
 
-### Puertos
+### Dev
 
--   **dev**:
-    -   gateway: `8080`
-    -   auth: `8081`
-    -   inventory: `8082`
-    -   alert: `8083`
-    -   audit: `8084`
-    -   prediction-service: `8085` directo desde su repositorio, o `/api/predictions` por gateway
-    -   postgres: `5433`
--   **qa**:
-    -   gateway: `9080`
-    -   auth: `9081`
-    -   inventory: `9082`
-    -   alert: `9083`
-    -   audit: `9084`
-    -   prediction-service: `9085` directo desde su repositorio, o `/api/predictions` por gateway
-    -   postgres: `6433`
--   **main**:
-    -   gateway: `10080`
-    -   auth: `10081`
-    -   inventory: `10082`
-    -   alert: `10083`
-    -   audit: `10084`
-    -   prediction-service: `10085` directo desde su repositorio, o `/api/predictions` por gateway
-    -   postgres: `7433`
+```bash
+cd FarmaExpres_Backend
+docker compose --env-file .env.dev up -d --build
 
-## Red Interna (Networking)
+cd ../FarmaExpres-Micro-NoSQL
+docker compose --env-file .env.dev up -d --build
 
-Dentro de la red de Docker, los servicios se comunican utilizando sus puertos internos, que son fijos e independientes de los puertos expuestos en el host.
+cd ../FarmaExpres-Frontend/frontend
+docker compose --env-file .env.dev up -d --build
+```
 
--   `auth-service`: `8081`
--   `inventory-service`: `8082`
--   `alert-service`: `8083`
--   `audit-service`: `8084`
--   `prediction-service`: `8000` dentro de su contenedor Docker
--   `api-gateway`: `8080`
--   `postgres`: `5432`
+### QA
 
-El `api-gateway` siempre se comunicará con los demás servicios a través de estos puertos internos (ej: `http://auth-service:8081`).
+```bash
+cd FarmaExpres_Backend
+docker compose --env-file .env.qa up -d --build
 
-Para el servicio predictivo, el repositorio `FarmaExpres-Micro-NoSQL` debe unirse a la red Docker del backend mediante `BACKEND_NETWORK=farmaexpres-dev_default` en desarrollo. El gateway usa `PREDICTION_SERVICE_URL`, por defecto `http://prediction-service:8000`.
+cd ../FarmaExpres-Micro-NoSQL
+docker compose --env-file .env.qa up -d --build
 
-## Decisiones de Arquitectura (ADRs)
+cd ../FarmaExpres-Frontend/frontend
+docker compose --env-file .env.qa up -d --build
+```
+
+### Main
+
+```bash
+cd FarmaExpres_Backend
+docker compose --env-file .env.main up -d --build
+
+cd ../FarmaExpres-Micro-NoSQL
+docker compose --env-file .env.main up -d --build
+
+cd ../FarmaExpres-Frontend/frontend
+docker compose --env-file .env.main up -d --build
+```
+
+Si el frontend o el microservicio viven en otro repositorio local, deben respetar la misma estrategia de puertos, nombre de proyecto Docker y red por ambiente.
+
+## Configuracion de Entornos
+
+El proyecto utiliza diferentes puertos para los entornos de `dev`, `qa` y `main` a traves de archivos de entorno.
+
+Los puertos internos son fijos para comunicacion entre contenedores:
+
+- `api-gateway`: `8080`
+- `auth-service`: `8081`
+- `inventory-service`: `8082`
+- `alert-service`: `8083`
+- `audit-service`: `8084`
+- `postgres`: `5432`
+- `prediction-service`: `8000` dentro de su propio contenedor
+
+Los puertos externos son para acceso desde navegador, Postman, pgAdmin o clientes fuera de Docker:
+
+- **dev**:
+  - gateway: `8080`
+  - auth: `18081`
+  - inventory: `8082`
+  - alert: `8083`
+  - audit: `8084`
+  - prediction-service: `8085` directo desde su repositorio, o `/api/predictions` por gateway
+  - postgres: `5433`
+- **qa**:
+  - gateway: `9080`
+  - auth: `9081`
+  - inventory: `9082`
+  - alert: `9083`
+  - audit: `9084`
+  - prediction-service: `9085` directo desde su repositorio, o `/api/predictions` por gateway
+  - postgres: `6433`
+- **main**:
+  - gateway: `10080`
+  - auth: `10081`
+  - inventory: `10082`
+  - alert: `10083`
+  - audit: `10084`
+  - prediction-service: `10085` directo desde su repositorio, o `/api/predictions` por gateway
+  - postgres: `7433`
+
+## Red Interna
+
+Dentro de la red de Docker, los servicios se comunican usando nombres de servicio y puertos internos. El `api-gateway` se comunica con los demas servicios por direcciones como `http://auth-service:8081`.
+
+Para el servicio predictivo, el repositorio `FarmaExpres-Micro-NoSQL` debe unirse a la red Docker del backend:
+
+- `dev`: `BACKEND_NETWORK=farmaexpres-dev_default`
+- `qa`: `BACKEND_NETWORK=farmaexpres-qa_default`
+- `main`: `BACKEND_NETWORK=farmaexpres-main_default`
+
+El gateway usa `PREDICTION_SERVICE_URL`, por defecto `http://prediction-service:8000`.
+
+## Decisiones de Arquitectura
 
 Las decisiones de arquitectura importantes se documentan en la carpeta [docs/ADR](docs/ADR/).
 
-## Documentación de la API
+## Documentacion de la API
 
 Los contratos de la API y otros documentos relevantes se encuentran en la carpeta `docs/`.
 
 ## Pruebas
 
-Cada microservicio incluye su propio conjunto de pruebas. Por ejemplo, el `alert-service` tiene pruebas unitarias y de integración en su carpeta `tests/`. La estrategia de pruebas general se define en el [ADR-009](docs/ADR/ADR-009-estrategia-pruebas-microservicios.md).
+Cada microservicio incluye su propio conjunto de pruebas. Por ejemplo, el `alert-service` tiene pruebas unitarias y de integracion en su carpeta `tests/`. La estrategia de pruebas general se define en el [ADR-009](docs/ADR/ADR-009-estrategia-pruebas-microservicios.md).
