@@ -11,6 +11,15 @@ El proyecto ahora maneja la base de datos con una estructura versionada en `data
 
 Los microservicios quedaron en modo `ddl-auto: validate` para evitar cambios automaticos sobre el esquema.
 
+## Microservicios
+
+- `api-gateway`: punto de entrada para las peticiones del frontend.
+- `auth-service`: autenticacion y emision de tokens JWT.
+- `inventory-service`: gestion de productos, lotes, entradas, salidas y movimientos.
+- `alert-service`: alertas operativas de inventario.
+- `audit-service`: auditoria de movimientos e inconsistencias.
+- `prediction-service`: servicio externo en Python y FastAPI. Se expone por el gateway en `/api/predictions` y consume el snapshot analitico de `inventory-service`.
+
 ## Puertos por ambiente
 
 El proyecto ahora soporta puertos distintos para `dev`, `qa` y `main` usando archivos de entorno:
@@ -63,6 +72,7 @@ Eso significa que dentro de Docker:
 - `alert-service` sigue escuchando en `8083`
 - `api-gateway` sigue escuchando en `8080`
 - `postgres` sigue escuchando en `5432`
+- `prediction-service` escucha en `8000` dentro de su propio contenedor
 
 Por lo tanto, el gateway no necesita consumir los puertos externos de `dev`, `qa` o `main` para hablar con los otros microservicios cuando todos viven en el mismo `docker compose`.
 
@@ -73,3 +83,5 @@ Ejemplo:
 Regla practica:
 - puertos externos: acceso desde navegador, Postman, pgAdmin o clientes fuera de Docker
 - puertos internos: comunicacion entre contenedores del mismo ambiente
+
+Para el servicio predictivo, el repositorio `FarmaExpres-Micro-NoSQL` debe unirse a la red Docker del backend mediante `BACKEND_NETWORK=farmaexpres-dev_default` en desarrollo. El gateway usa `PREDICTION_SERVICE_URL`, por defecto `http://prediction-service:8000`.
