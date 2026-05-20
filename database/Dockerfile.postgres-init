@@ -1,0 +1,4 @@
+FROM postgres:16
+
+WORKDIR /workspace
+COPY bootstrap.sql /workspace/bootstrap.sql

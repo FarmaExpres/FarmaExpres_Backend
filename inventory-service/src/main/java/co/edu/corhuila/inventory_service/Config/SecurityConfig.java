@@ -57,6 +57,8 @@ public class SecurityConfig {
                         .hasAnyRole("ADMIN", "AUDITOR", "FARMACEUTICO")
                         .requestMatchers(HttpMethod.GET, "/api/inventory/reports/**")
                         .hasAnyRole("ADMIN", "AUDITOR", "FARMACEUTICO")
+                        .requestMatchers(HttpMethod.GET, "/api/inventory/analytics/**")
+                        .hasAnyRole("ADMIN", "AUDITOR")
 
                         // Administrative product management: includes inactive products
                         .requestMatchers(HttpMethod.GET, "/api/products/all")
@@ -79,6 +81,8 @@ public class SecurityConfig {
                         .hasAnyRole("ADMIN", "AUDITOR")
                         .requestMatchers(HttpMethod.GET, "/api/movements/filter-by-user")
                         .hasAnyRole("ADMIN", "AUDITOR")
+                        .requestMatchers(HttpMethod.PATCH, "/api/movements/*/audit-status")
+                        .hasRole("AUDITOR")
 
                         // Legacy aliases for movements (kept restricted to reporting roles)
                         .requestMatchers(HttpMethod.GET, "/api/motions/**")
@@ -112,4 +116,3 @@ public class SecurityConfig {
         return http.build();
     }
 }
-

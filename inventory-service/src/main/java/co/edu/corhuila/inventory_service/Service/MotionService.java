@@ -5,6 +5,7 @@ import co.edu.corhuila.inventory_service.Dto.FefoConsumptionItemResponse;
 import co.edu.corhuila.inventory_service.Dto.InventoryEntryRequest;
 import co.edu.corhuila.inventory_service.Dto.InventoryEntryResponse;
 import co.edu.corhuila.inventory_service.Dto.InventoryExitRequest;
+import co.edu.corhuila.inventory_service.Dto.InventoryAuditStatusRequest;
 import co.edu.corhuila.inventory_service.Dto.MotionResponse;
 import co.edu.corhuila.inventory_service.Dto.MovementBatchReportItemResponse;
 import co.edu.corhuila.inventory_service.Dto.MovementExecutionResponse;
@@ -13,6 +14,7 @@ import co.edu.corhuila.inventory_service.Dto.UserActivityReportResponse;
 import co.edu.corhuila.inventory_service.Entity.Batch;
 import co.edu.corhuila.inventory_service.Entity.BatchStatus;
 import co.edu.corhuila.inventory_service.Entity.Motion;
+import co.edu.corhuila.inventory_service.Entity.MotionStatus;
 import co.edu.corhuila.inventory_service.Entity.MovementType;
 import co.edu.corhuila.inventory_service.Entity.Product;
 import co.edu.corhuila.inventory_service.Repository.BatchRepository;
@@ -26,6 +28,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -77,6 +80,35 @@ public class MotionService {
                 .stream()
                 .map(MotionResponse::new)
                 .toList();
+    }
+
+    public MotionResponse getMotion(Long id) {
+        Motion motion = motionRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Movimiento no encontrado"));
+        return new MotionResponse(motion);
+    }
+
+    @Transactional
+    public MotionResponse updateAuditStatus(Long id, InventoryAuditStatusRequest request) {
+        Motion motion = motionRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Movimiento no encontrado"));
+        MotionStatus status = parseMotionStatus(request == null ? null : request.getStatus());
+
+        motion.setStatus(status);
+        motion.setObservation(normalizeOptionalText(request == null ? null : request.getObservation()));
+
+        if (status == MotionStatus.MARKED || status == MotionStatus.REVIEWED) {
+            MotionActorContext actor = extractMotionActor();
+            motion.setMarkedByUserId(actor.userId());
+            motion.setMarkedByUserName(actor.userName());
+            motion.setMarkedAt(Instant.now());
+        } else {
+            motion.setMarkedByUserId(null);
+            motion.setMarkedByUserName(null);
+            motion.setMarkedAt(null);
+        }
+
+        return new MotionResponse(motionRepository.save(motion));
     }
 
     public List<MotionResponse> listMotionByUser(Long userId) {
@@ -478,6 +510,18 @@ public class MotionService {
                     "type invalido. Valores permitidos: ENTRANCE, EXIT, UPDATED, DELETED"
             );
         };
+    }
+
+    private MotionStatus parseMotionStatus(String rawStatus) {
+        if (rawStatus == null || rawStatus.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "status es obligatorio");
+        }
+
+        try {
+            return MotionStatus.valueOf(rawStatus.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "status invalido. Valores permitidos: NORMAL, MARKED, REVIEWED");
+        }
     }
 
     private void validateMovementRequest(MovementRequest request) {

@@ -75,6 +75,7 @@ public class JwtAuthenticationFilter implements WebFilter {
                 || "/status".equals(path)
                 || "/actuator/health".equals(path)
                 || "/actuator/info".equals(path)
+                || (method == HttpMethod.GET && "/api/predictions/health".equals(path))
                 || (method == HttpMethod.POST && "/api/auth/login".equals(path))
                 || (method == HttpMethod.POST && "/api/auth/refresh".equals(path))
                 || (method == HttpMethod.POST && "/api/auth/logout".equals(path));

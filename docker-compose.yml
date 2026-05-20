@@ -10,7 +10,6 @@ services:
       - "${POSTGRES_PORT:-5433}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/bootstrap.sql:/docker-entrypoint-initdb.d/bootstrap.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 30s
@@ -18,14 +17,14 @@ services:
       retries: 5
 
   postgres-init:
-    image: postgres:16
+    build:
+      context: ./database
+      dockerfile: Dockerfile.postgres-init
     depends_on:
       postgres:
         condition: service_healthy
     environment:
       PGPASSWORD: ${POSTGRES_PASSWORD:-1234}
-    volumes:
-      - ./database/bootstrap.sql:/workspace/bootstrap.sql
     command:
       - psql
       - -h
@@ -40,12 +39,12 @@ services:
       - /workspace/bootstrap.sql
 
   liquibase-auth:
-    image: liquibase/liquibase:4.31
+    build:
+      context: ./database
+      dockerfile: Dockerfile.liquibase
     depends_on:
       postgres-init:
         condition: service_completed_successfully
-    volumes:
-      - ./database:/workspace/database
     working_dir: /workspace/database/auth
     environment:
       AUTH_DB_PASSWORD: ${AUTH_DB_PASSWORD:-auth_app_dev_password}
@@ -60,12 +59,12 @@ services:
       - update
 
   liquibase-inventory:
-    image: liquibase/liquibase:4.31
+    build:
+      context: ./database
+      dockerfile: Dockerfile.liquibase
     depends_on:
       postgres-init:
         condition: service_completed_successfully
-    volumes:
-      - ./database:/workspace/database
     working_dir: /workspace/database/inventory
     environment:
       INVENTORY_DB_PASSWORD: ${INVENTORY_DB_PASSWORD:-inventory_app_dev_password}
@@ -75,6 +74,26 @@ services:
       - --changeLogFile=changelog-master.yaml
       - --url=jdbc:postgresql://postgres:5432/farmaexpres
       - --default-schema-name=inventory
+      - --username=${POSTGRES_USER:-postgres}
+      - --password=${POSTGRES_PASSWORD:-1234}
+      - update
+
+  liquibase-audit:
+    build:
+      context: ./database
+      dockerfile: Dockerfile.liquibase
+    depends_on:
+      postgres-init:
+        condition: service_completed_successfully
+    working_dir: /workspace/database/audit
+    environment:
+      AUDIT_DB_PASSWORD: ${AUDIT_DB_PASSWORD:-audit_app_dev_password}
+      AUDIT_READ_DB_PASSWORD: ${AUDIT_READ_DB_PASSWORD:-audit_read_dev_password}
+    command:
+      - --search-path=/workspace/database/audit
+      - --changeLogFile=changelog-master.yaml
+      - --url=jdbc:postgresql://postgres:5432/farmaexpres
+      - --default-schema-name=audit
       - --username=${POSTGRES_USER:-postgres}
       - --password=${POSTGRES_PASSWORD:-1234}
       - update
@@ -119,6 +138,29 @@ services:
       timeout: 10s
       retries: 5
 
+  audit-service:
+    build: ./audit-service
+    depends_on:
+      liquibase-audit:
+        condition: service_completed_successfully
+      inventory-service:
+        condition: service_healthy
+    ports:
+      - "${AUDIT_PORT:-8084}:8084"
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/farmaexpres?currentSchema=audit
+      DB_SCHEMA: audit
+      DB_USERNAME: ${AUDIT_DB_USERNAME:-farmaexpres_audit_app_user}
+      DB_PASSWORD: ${AUDIT_DB_PASSWORD:-audit_app_dev_password}
+      JWT_SECRET: ${JWT_SECRET:-mi_clave_super_secreta_ultra_segura_de_256_bits_minimo_1234567890}
+      INVENTORY_SERVICE_URL: http://inventory-service:8082
+      INVENTORY_SERVICE_TIMEOUT_MS: 5000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
   alert-service:
     build: ./alert-service
     depends_on:
@@ -146,10 +188,12 @@ services:
       - auth-service
       - inventory-service
       - alert-service
+      - audit-service
     ports:
       - "${GATEWAY_PORT:-8080}:8080"
     environment:
       JWT_SECRET: ${JWT_SECRET:-mi_clave_super_secreta_ultra_segura_de_256_bits_minimo_1234567890}
+      PREDICTION_SERVICE_URL: ${PREDICTION_SERVICE_URL:-http://prediction-service:8000}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s
